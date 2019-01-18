@@ -1,4 +1,4 @@
-package pathfinder.uninformed;
+// package pathfinder.uninformed;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class PathfinderTests {
         };
         MazeProblem prob = new MazeProblem(maze);
         ArrayList<String> solution = Pathfinder.solve(prob);
-        
+
         // result will be a 2-tuple (isSolution, cost) where
         // - isSolution = 0 if it is not, 1 if it is
         // - cost = numerical cost of proposed solution
@@ -28,7 +28,7 @@ public class PathfinderTests {
         assertEquals(1, result[0]); // Test that result is a solution
         assertEquals(2, result[1]); // Ensure that the solution is optimal
     }
-    
+
     @Test
     public void testPathfinder_t1() {
         String[] maze = {
@@ -41,7 +41,7 @@ public class PathfinderTests {
         };
         MazeProblem prob = new MazeProblem(maze);
         ArrayList<String> solution = Pathfinder.solve(prob);
-        
+
         int[] result = prob.testSolution(solution);
         assertEquals(1,  result[0]); // Test that result is a solution
         assertEquals(12, result[1]); // Ensure that the solution is optimal

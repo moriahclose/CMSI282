@@ -1,4 +1,4 @@
-package pathfinder.uninformed;
+// package pathfinder.uninformed;
 
 import java.util.Map;
 import java.util.ArrayList;
@@ -17,9 +17,9 @@ public class MazeProblem {
     private int rows, cols;
     public final MazeState INITIAL_STATE, GOAL_STATE;
     private static final Map<String, MazeState> TRANS_MAP = createTransitions();
-    
+
     /**
-     * @return Creates the transition map that maps String actions to 
+     * @return Creates the transition map that maps String actions to
      * MazeState offsets, of the format:
      * { "U": (0, -1), "D": (0, +1), "L": (-1, 0), "R": (+1, 0) }
      */
@@ -31,15 +31,15 @@ public class MazeProblem {
         result.put("R", new MazeState( 1, 0));
         return result;
     }
-    
-    
+
+
     // Constructor
     // -----------------------------------------------------------------------------
-    
+
     /**
      * Constructs a new MazeProblem from the given maze; responsible for finding
      * the initial and goal states in the maze, and storing in the MazeProblem state.
-     * 
+     *
      * @param maze An array of Strings in which characters represent the legal maze
      * entities, including:<br>
      * 'X': A wall, 'G': A goal, 'I': The initial state, '.': an open spot
@@ -60,7 +60,7 @@ public class MazeProblem {
         this.rows = maze.length;
         this.cols = (rows == 0) ? 0 : maze[0].length();
         MazeState foundInitial = null, foundGoal = null;
-        
+
         // Find the initial and goal state in the given maze, and then
         // store in fields once found
         for (int row = 0; row < rows; row++) {
@@ -81,25 +81,25 @@ public class MazeProblem {
         INITIAL_STATE = foundInitial;
         GOAL_STATE = foundGoal;
     }
-    
-    
+
+
     // Methods
     // -----------------------------------------------------------------------------
-    
+
     /**
      * Returns whether or not the given state is a Goal state.
-     * 
+     *
      * @param state A MazeState (col, row) to test
      * @return Boolean of whether or not the given state is a Goal.
      */
     public boolean isGoal (MazeState state) {
         return state.equals(GOAL_STATE);
     }
-    
+
     /**
      * Returns a map of the states that can be reached from the given input
      * state using any of the available actions.
-     * 
+     *
      * @param state A MazeState (col, row) representing the current state
      * from which actions can be taken
      * @return Map A map of actions to the states that they lead to, of the
@@ -110,14 +110,14 @@ public class MazeProblem {
         // Store transitions as a Map between actions ("U", "D", ...) and
         // the MazeStates that they result in from state
         Map<String, MazeState> result = new HashMap<>();
-        
+
         // For each of the possible directions (stored in TRANS_MAP), test
         // to see if it is a valid transition
         for (Map.Entry<String, MazeState> action : TRANS_MAP.entrySet()) {
             MazeState actionMod = action.getValue(),
                       newState  = new MazeState(state.col, state.row);
             newState.add(actionMod);
-            
+
             // If the given state *is* a valid transition (i.e., within
             // map bounds and no wall at the position)...
             if (newState.row >= 0 && newState.row < rows &&
@@ -129,11 +129,11 @@ public class MazeProblem {
         }
         return result;
     }
-    
+
     /**
      * Given a possibleSoln, tests to ensure that it is indeed a solution to this MazeProblem,
      * as well as returning the cost.
-     * 
+     *
      * @param possibleSoln A possible solution to test, which is a list of actions of the format:
      * ["U", "D", "D", "L", ...]
      * @return A 2-element array of ints of the format [isSoln, cost] where:<br>
@@ -145,7 +145,7 @@ public class MazeProblem {
         MazeState movingState = new MazeState(INITIAL_STATE.col, INITIAL_STATE.row);
         int cost = 0;
         int[] result = {0, -1};
-        
+
         // For each action, modify the movingState, and then check that we have landed in
         // a legal position in this maze
         for (String action : possibleSoln) {
@@ -160,5 +160,5 @@ public class MazeProblem {
         result[1] = cost;
         return result;
     }
-    
+
 }
