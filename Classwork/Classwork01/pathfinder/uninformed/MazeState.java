@@ -1,4 +1,4 @@
-// package pathfinder.uninformed;
+package pathfinder.uninformed;
 
 /**
  * Maze Pathfinding representation of a given state, i.e., an occupiable position

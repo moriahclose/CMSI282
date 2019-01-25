@@ -1,4 +1,4 @@
-// package pathfinder.uninformed;
+package pathfinder.uninformed;
 
 import java.util.Map;
 import java.util.ArrayList;

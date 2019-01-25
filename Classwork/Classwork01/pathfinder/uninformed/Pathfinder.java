@@ -1,6 +1,8 @@
-// ******************************************************************
-// Authors: Ayla Khoshava, Cooper LaRhette, Moriah Tolliver
-// ******************************************************************
+//**********************************************************
+// Authors: Ayla Khoshaba, Cooper LaRhette, Moriah Tolliver
+//**********************************************************
+
+package pathfinder.uninformed;
 
 import java.util.*;
 
@@ -32,13 +34,13 @@ public class Pathfinder {
         frontier.add(new SearchTreeNode(problem.INITIAL_STATE, null, null));
 
 
-
         // TODO: Loop: as long as the frontier is not empty...
 
         while (!frontier.isEmpty()) {
 
+
             // TODO: Get the next node to expand by the ordering of breadth-first search
-            currentNode = frontier.remove();
+            currentNode = frontier.peek();
 
             // TODO: If that node's state is the goal (see problem's isGoal method),
             // you're done! Return the solution
@@ -59,6 +61,7 @@ public class Pathfinder {
                 // action, state, and parent
                 frontier.add(new SearchTreeNode(action.getValue(), action.getKey(), currentNode));
             }
+            frontier.remove();
         }
 
         // Should never get here, but just return null to make the compiler happy
@@ -68,7 +71,6 @@ public class Pathfinder {
     public static ArrayList<String> buildPath(SearchTreeNode root) {
         Stack<String> temp = new Stack<>();
         ArrayList<String> result = new ArrayList<>();
-
         while (root.parent != null) {
             temp.add(root.action);
             root = root.parent;
@@ -77,6 +79,30 @@ public class Pathfinder {
             result.add(temp.pop());
         }
         return result;
+    }
+}
+
+/**
+ * SearchTreeNode that is used in the Search algorithm to construct the Search
+ * tree.
+ */
+class SearchTreeNode {
+
+    MazeState state;
+    String action;
+    SearchTreeNode parent;
+
+    /**
+     * Constructs a new SearchTreeNode to be used in the Search Tree.
+     *
+     * @param state  The MazeState (col, row) that this node represents.
+     * @param action The action that *led to* this state / node.
+     * @param parent Reference to parent SearchTreeNode in the Search Tree.
+     */
+    SearchTreeNode(MazeState state, String action, SearchTreeNode parent) {
+        this.state = state;
+        this.action = action;
+        this.parent = parent;
     }
 
 }
