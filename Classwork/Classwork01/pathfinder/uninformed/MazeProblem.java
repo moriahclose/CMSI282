@@ -151,6 +151,7 @@ public class MazeProblem {
         for (String action : possibleSoln) {
             MazeState actionMod = TRANS_MAP.get(action);
             movingState.add(actionMod);
+            System.out.println( "actionMode: " + actionMod );
             if (maze[movingState.row].charAt(movingState.col) == 'X') {
                 return result;
             }
