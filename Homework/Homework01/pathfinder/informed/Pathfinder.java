@@ -2,7 +2,7 @@
 // Authors: Ayla Khoshaba, Cooper LaRhette, Moriah Tolliver
 //**********************************************************
 
-package pathfinder.uninformed;
+// package pathfinder.informed;
 
 import java.util.*;
 
