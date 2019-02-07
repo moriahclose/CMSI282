@@ -15,7 +15,8 @@ public class MazeProblem {
     // -----------------------------------------------------------------------------
     private String[] maze;
     private int rows, cols;
-    public final MazeState INITIAL_STATE, GOAL_STATE;
+    public final MazeState INITIAL_STATE, KEY_STATE;
+    public final ArrayList<MazeState> GOAL_STATES;
     private static final Map<String, MazeState> TRANS_MAP = createTransitions();
 
     /**
@@ -42,7 +43,7 @@ public class MazeProblem {
      *
      * @param maze An array of Strings in which characters represent the legal maze
      * entities, including:<br>
-     * 'X': A wall, 'G': A goal, 'I': The initial state, '.': an open spot
+     * 'X': A wall, 'G': A goal, 'K': A key, 'M': A mud tile, 'I': The initial state, '.': an open spot
      * For example, a valid maze might look like:
      * <pre>
      * String[] maze = {
@@ -59,7 +60,8 @@ public class MazeProblem {
         this.maze = maze;
         this.rows = maze.length;
         this.cols = (rows == 0) ? 0 : maze[0].length();
-        MazeState foundInitial = null, foundGoal = null;
+        MazeState foundInitial = null, foundKey = null;
+        GOAL_STATES = new ArrayList<>();
 
         // Find the initial and goal state in the given maze, and then
         // store in fields once found
@@ -69,7 +71,10 @@ public class MazeProblem {
                 case 'I':
                     foundInitial = new MazeState(col, row); break;
                 case 'G':
-                    foundGoal = new MazeState(col, row); break;
+                    GOAL_STATES.add(new MazeState(col, row)); break;
+                case 'K':
+                    foundKey = new MazeState(col, row); break;
+                case 'M':
                 case '.':
                 case 'X':
                     break;
@@ -79,12 +84,37 @@ public class MazeProblem {
             }
         }
         INITIAL_STATE = foundInitial;
-        GOAL_STATE = foundGoal;
+        KEY_STATE = foundKey;
     }
 
 
     // Methods
     // -----------------------------------------------------------------------------
+
+    /**
+     * Returns cost acquired from stepping on input MazeState
+     * @param state a MazeState calculate cost of
+     * @return int cost of stepping onto MazeState
+     */
+    public int getCost (MazeState state) {
+        return (isMudTile(state)) ? 3 : 1;
+    }
+
+    /**
+     * Returns distance from input goal state to nearest goal state
+     * @param state MazeState representing where to start calculation from
+     * @return int distance to nearest goal state
+     */
+     public int manhattanDistance (MazeState state1, MazeState state2) {
+         int minDistance = this.rows + this.cols;
+         for ( int i = 0; i < GOAL_STATES.size(); i++) {
+             int distance = Math.abs(state1.col - state2.col) + Math.abs(state1.row - state2.row);
+             if ( distance < minDistance ) {
+                 minDistance = distance;
+             }
+         }
+         return minDistance;
+     }
 
     /**
      * Returns whether or not the given state is a Goal state.
@@ -93,7 +123,32 @@ public class MazeProblem {
      * @return Boolean of whether or not the given state is a Goal.
      */
     public boolean isGoal (MazeState state) {
-        return state.equals(GOAL_STATE);
+        for ( int i = 0; i < this.GOAL_STATES.size(); i++ ) {
+            if ( state.equals(this.GOAL_STATES.get(i) ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns whether or not the given state is a Mud tile.
+     *
+     * @param state A MazeState (col, row) to test
+     * @return Boolean of whether or not the given state is a Mud tile.
+     */
+    public boolean isMudTile (MazeState state) {
+        return ( this.maze[state.row].charAt(state.col) == 'M' );
+    }
+
+    /**
+     * Returns whether or not the given state is a Key state.
+     *
+     * @param state A MazeState (col, row) to test
+     * @return Boolean of whether or not the given state is a Key.
+     */
+    public boolean isKey (MazeState state) {
+        return state.equals(KEY_STATE);
     }
 
     /**
@@ -163,6 +218,52 @@ public class MazeProblem {
         result[0] = isGoal(movingState) && hasKey ? 1 : 0;
         result[1] = cost;
         return result;
+    }
+
+
+    public static void main(String args[]) {
+        String[] maze = {
+        "XXXXXXX",
+        "XI...GX",
+        "X.....X",
+        "X.X.XKX",
+        "XXXXXXX"
+        };
+        MazeProblem prob = new MazeProblem(maze);
+        System.out.println(prob.isKey(new MazeState(5,3)));
+
+        String[] maze1 = {
+            "XXXXXXX",
+            "XI....X",
+            "X.MMM.X",
+            "X.XKXGX",
+            "XXXXXXX"
+        };
+        MazeProblem prob1 = new MazeProblem(maze1);
+        System.out.println(prob1.isKey(new MazeState(3,3)));
+
+        String[] maze2 = {
+            "XXXXXXX",
+            "XI.G..X",
+            "X.MXMGX",
+            "XKXXX.X",
+            "XXXXXXX"
+            };
+        MazeProblem prob2 = new MazeProblem(maze2);
+        System.out.println(prob2.isKey(new MazeState(1,3)));
+
+        System.out.println(prob2.manhattanDistance( new MazeState(1,2), new MazeState(1,2)));
+        System.out.println(prob2.manhattanDistance( new MazeState(5,3), new MazeState(1,1)));
+
+        System.out.println(prob2.isMudTile( new MazeState(2, 2)));
+        System.out.println(prob2.isMudTile( new MazeState(4, 2)));
+        System.out.println(prob2.isMudTile( new MazeState(1, 2)));
+
+        System.out.println(prob2.getCost( new MazeState(2, 2))); //should be 4
+        System.out.println(prob2.getCost( new MazeState(4, 2))); //should be 6
+        System.out.println(prob2.getCost( new MazeState(1, 2))); //should be 1
+        System.out.println(prob2.getCost( new MazeState(1, 1))); //should be 0
+
     }
 
 }
