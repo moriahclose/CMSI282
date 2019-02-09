@@ -97,24 +97,33 @@ public class MazeProblem {
      * @return int cost of stepping onto MazeState
      */
     public int getCost (MazeState state) {
-        return (isMudTile(state)) ? 3 : 1;
+        return (isMudTile(state)) ? distance(this.INITIAL_STATE, state) + 2 : distance(this.INITIAL_STATE, state);
     }
 
     /**
-     * Returns distance from input goal state to nearest goal state
+     * Returns distance from input state to nearest goal state
      * @param state MazeState representing where to start calculation from
      * @return int distance to nearest goal state
      */
-     public int manhattanDistance (MazeState state1, MazeState state2) {
+     public int distanceToGoal (MazeState state) {
          int minDistance = this.rows + this.cols;
          for ( int i = 0; i < GOAL_STATES.size(); i++) {
-             int distance = Math.abs(state1.col - state2.col) + Math.abs(state1.row - state2.row);
+             int distance = Math.abs(state.col - GOAL_STATES.get(i).col) + Math.abs(state.row - GOAL_STATES.get(i).row);
              if ( distance < minDistance ) {
                  minDistance = distance;
              }
          }
          return minDistance;
      }
+
+     /**
+      * Returns distance from initial state to input state
+      * @param state MazeState representing where to start calculation from
+      * @return int distance to input state
+      */
+      public int distance (MazeState state1, MazeState state2) {
+          return Math.abs(state1.col - state2.col) + Math.abs(state1.row - state2.row);
+      }
 
     /**
      * Returns whether or not the given state is a Goal state.
@@ -223,46 +232,69 @@ public class MazeProblem {
 
     public static void main(String args[]) {
         String[] maze = {
-        "XXXXXXX",
-        "XI...GX",
-        "X.....X",
-        "X.X.XKX",
-        "XXXXXXX"
+            "XXXXXXX",
+            "XIM...X",
+            "XMMK..X",
+            "XMX.XGX",
+            "XXXXXXX"
+            // "XXXXXXX",
+            // "XI....X",
+            // "X.MMM.X",
+            // "X..KXGX",
+            // "XXXXXXX"
         };
         MazeProblem prob = new MazeProblem(maze);
-        System.out.println(prob.isKey(new MazeState(5,3)));
+        System.out.println( prob.getCost(new MazeState(2,1)));
+        // String[] maze = {
+        // "XXXXXXX",
+        // "XI...GX",
+        // "X.....X",
+        // "X.X.XKX",
+        // "XXXXXXX"
+        // };
+        // MazeProblem prob = new MazeProblem(maze);
+        // System.out.println(prob.isKey(new MazeState(5,3)));
+        //
+        // String[] maze1 = {
+        //     "XXXXXXX",
+        //     "XI....X",
+        //     "X.MMM.X",
+        //     "X.XKXGX",
+        //     "XXXXXXX"
+        // };
+        // MazeProblem prob1 = new MazeProblem(maze1);
+        // System.out.println(prob1.isKey(new MazeState(3,3)));
+        //
+        // String[] maze2 = {
+        //     "XXXXXXX",
+        //     "XI.G..X",
+        //     "X.MXMGX",
+        //     "XKXXX.X",
+        //     "XXXXXXX"
+        //     };
+        // MazeProblem prob2 = new MazeProblem(maze2);
+        // System.out.println(prob2.isKey(new MazeState(1,3)));
+        //
+        // System.out.println( "Testing distance to GOAL");
+        // System.out.println(prob2.distanceToGoal( new MazeState(1,2))); //should be 3
+        // System.out.println(prob2.distanceToGoal( new MazeState(5,3))); //should be 1
+        // System.out.println(prob2.distanceToGoal( new MazeState(5,2))); //should be 0
+        // System.out.println(prob2.distanceToGoal( new MazeState(3,1))); //should be 0
+        // System.out.println(prob2.distance(new MazeState(5,2), new MazeState(5,3))); //should be 1
 
-        String[] maze1 = {
-            "XXXXXXX",
-            "XI....X",
-            "X.MMM.X",
-            "X.XKXGX",
-            "XXXXXXX"
-        };
-        MazeProblem prob1 = new MazeProblem(maze1);
-        System.out.println(prob1.isKey(new MazeState(3,3)));
+        // System.out.println( "\nTesting distance from Initial");
+        // System.out.println(prob2.distanceFromInitial( new MazeState(1,2))); //should be 1
+        // System.out.println(prob2.distanceFromInitial( new MazeState(5,3))); //should be 6
+        // System.out.println(prob2.distanceFromInitial( new MazeState(5,2))); //should be 5
+        // System.out.println(prob2.distanceFromInitial( new MazeState(3,1))); //should be 2
 
-        String[] maze2 = {
-            "XXXXXXX",
-            "XI.G..X",
-            "X.MXMGX",
-            "XKXXX.X",
-            "XXXXXXX"
-            };
-        MazeProblem prob2 = new MazeProblem(maze2);
-        System.out.println(prob2.isKey(new MazeState(1,3)));
-
-        System.out.println(prob2.manhattanDistance( new MazeState(1,2), new MazeState(1,2)));
-        System.out.println(prob2.manhattanDistance( new MazeState(5,3), new MazeState(1,1)));
-
-        System.out.println(prob2.isMudTile( new MazeState(2, 2)));
-        System.out.println(prob2.isMudTile( new MazeState(4, 2)));
-        System.out.println(prob2.isMudTile( new MazeState(1, 2)));
-
-        System.out.println(prob2.getCost( new MazeState(2, 2))); //should be 4
-        System.out.println(prob2.getCost( new MazeState(4, 2))); //should be 6
-        System.out.println(prob2.getCost( new MazeState(1, 2))); //should be 1
-        System.out.println(prob2.getCost( new MazeState(1, 1))); //should be 0
+        // System.out.println(prob2.isMudTile( new MazeState(4, 2)));
+        // System.out.println(prob2.isMudTile( new MazeState(1, 2)));
+        //
+        // System.out.println(prob2.getCost( new MazeState(2, 2))); //should be 4
+        // System.out.println(prob2.getCost( new MazeState(4, 2))); //should be 6
+        // System.out.println(prob2.getCost( new MazeState(1, 2))); //should be 1
+        // System.out.println(prob2.getCost( new MazeState(1, 1))); //should be 0
 
     }
 

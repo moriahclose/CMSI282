@@ -32,11 +32,16 @@ public class PathfinderTests {
     @Test
     public void testPathfinder_t1() {
         String[] maze = {
+            // "XXXXXXX",
+            // "X.....X",
+            // "XIX.X.X",
+            // "XX.X..X",
+            // "XG....X",
+            // "XXXXXXX"
             "XXXXXXX",
-            "X.....X",
-            "XIX.X.X",
-            "XX.X..X",
-            "XG....X",
+            "XI....X",
+            "X.MMM.X",
+            "X.XKXGX",
             "XXXXXXX"
         };
         MazeProblem prob = new MazeProblem(maze);
