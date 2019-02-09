@@ -23,8 +23,9 @@ public class Pathfinder {
         Map<String, MazeState> transitions;
         ArrayList<MazeState> visitedStates = new ArrayList<>();
         SearchTreeNode currentNode;
+        boolean lookingForGoal = problem.isGoal(endState);
 
-        int heuristic = problem.distance( startState , endState );
+        int heuristic = (lookingForGoal) ? problem.distanceToGoal( startState ) : problem.distance( startState , endState );
         frontier.add( new SearchTreeNode( startState, null, null, heuristic) );
         frontierStates.add( frontier.peek().state );
         System.out.println( "frontier: " + frontier );
@@ -32,28 +33,29 @@ public class Pathfinder {
         int i = 0;
         while (true) {
 
-            currentNode = frontier.peek();
+            currentNode = frontier.poll();
             visitedStates.add(currentNode.state);
 
             System.out.println( "\ncurrentNode: " + currentNode );
 
-            if ( currentNode.state.equals(endState) ) {
+            boolean finished = (lookingForGoal) ? problem.isGoal(currentNode.state) : currentNode.state.equals(endState);
+            if ( finished ) {
                 return buildPath(currentNode);
             }
 
             transitions = problem.getTransitions(currentNode.state);
             for (Map.Entry<String, MazeState> action : transitions.entrySet()) {
-                heuristic = problem.getCost(action.getValue()) + problem.distance( action.getValue() , endState );
+                heuristic = (lookingForGoal) ? problem.getCost(action.getValue()) + problem.distanceToGoal(action.getValue()) : problem.getCost(action.getValue()) + problem.distance( action.getValue() , endState );
                 SearchTreeNode newNode = new SearchTreeNode(action.getValue(), action.getKey(), currentNode, heuristic);
+                System.out.println("Looking at transition: " + action.getValue() + " inVisited: " + !visitedStates.contains(newNode.state) + " inFrontier: " + !frontierStates.contains(newNode.state) );
                 if ( !visitedStates.contains(newNode.state) && !frontierStates.contains(newNode.state)) {
                     System.out.println( "Adding " + action.getValue() + " with g(n) " +  problem.getCost(action.getValue()) + " and h(n) " +  problem.distance( action.getValue() , endState ) );
                     frontier.add( newNode );
                     frontierStates.add( newNode.state );
-                    System.out.println( "frontier: " + frontier );
                 }
             }
-            frontier.remove();
             System.out.println( "frontier: " + frontier );
+            System.out.println( "frontierState: " + frontierStates );
             i++;
         }
         // return result;
@@ -69,44 +71,46 @@ public class Pathfinder {
      * the goal state, of the format: ["R", "R", "L", ...]
      */
     public static ArrayList<String> solve(MazeProblem problem) {
-        /// TODO: Initialize frontier--The frontier holds SearchTreeNodes!
-        PriorityQueue<SearchTreeNode> frontier = new PriorityQueue<>(5 , new SearchTreeNodeComparator());
-        ArrayList<String> keyPath = new ArrayList<>();
-        Map<String, MazeState> transitions;
-        ArrayList<SearchTreeNode> usedStates = new ArrayList<>();
-        SearchTreeNode currentNode;
-
-        int heuristic = problem.distance( problem.INITIAL_STATE, problem.KEY_STATE);
-        frontier.add( new SearchTreeNode( problem.INITIAL_STATE, null, null, heuristic ));
-
-        int i = 0;
-        //get path to the key
-        while (true) {
-            currentNode = frontier.peek();
-            // System.out.println("currentNode: " + currentNode);
-            usedStates.add(currentNode);
-
-            if (problem.isKey(currentNode.state)) {
-                keyPath = buildPath(currentNode);
-                break;
-            }
-
-            transitions = problem.getTransitions(currentNode.state);
-            System.out.println( transitions );
-
-            for (Map.Entry<String, MazeState> action : transitions.entrySet()) {
-                SearchTreeNode newNode = new SearchTreeNode(action.getValue(), action.getKey(), currentNode, heuristic);
-                if ( !usedStates.contains(newNode) ) {
-                    heuristic = problem.distance( action.getValue() , problem.INITIAL_STATE ) + problem.distance( action.getValue(), problem.KEY_STATE) + problem.getCost(action.getValue());
-                    frontier.add(newNode);
-                    // System.out.println("frontier: " + frontier);
-                }
-            }
-            frontier.remove();
-            i++;
-        }
-
+        ArrayList<String> keyPath = goFromTo( problem.INITIAL_STATE, problem.KEY_STATE, problem );
+        ArrayList<String> goalPath = goFromTo( problem.KEY_STATE, problem.GOAL_STATES.get(0), problem);
+        keyPath.addAll( goalPath );
         return keyPath;
+        // /// TODO: Initialize frontier--The frontier holds SearchTreeNodes!
+        // PriorityQueue<SearchTreeNode> frontier = new PriorityQueue<>(5 , new SearchTreeNodeComparator());
+        // ArrayList<String> keyPath = new ArrayList<>();
+        // Map<String, MazeState> transitions;
+        // ArrayList<SearchTreeNode> usedStates = new ArrayList<>();
+        // SearchTreeNode currentNode;
+        //
+        // int heuristic = problem.distance( problem.INITIAL_STATE, problem.KEY_STATE);
+        // frontier.add( new SearchTreeNode( problem.INITIAL_STATE, null, null, heuristic ));
+        //
+        // int i = 0;
+        // //get path to the key
+        // while (true) {
+        //     currentNode = frontier.peek();
+        //     // System.out.println("currentNode: " + currentNode);
+        //     usedStates.add(currentNode);
+        //
+        //     if (problem.isKey(currentNode.state)) {
+        //         keyPath = buildPath(currentNode);
+        //         break;
+        //     }
+        //
+        //     transitions = problem.getTransitions(currentNode.state);
+        //     System.out.println( transitions );
+        //
+        //     for (Map.Entry<String, MazeState> action : transitions.entrySet()) {
+        //         SearchTreeNode newNode = new SearchTreeNode(action.getValue(), action.getKey(), currentNode, heuristic);
+        //         if ( !usedStates.contains(newNode) ) {
+        //             heuristic = problem.distance( action.getValue() , problem.INITIAL_STATE ) + problem.distance( action.getValue(), problem.KEY_STATE) + problem.getCost(action.getValue());
+        //             frontier.add(newNode);
+        //             // System.out.println("frontier: " + frontier);
+        //         }
+        //     }
+        //     frontier.remove();
+        //     i++;
+        // }
     }
 
     public static ArrayList<String> buildPath(SearchTreeNode root) {
@@ -125,8 +129,8 @@ public class Pathfinder {
     public static void main(String args[]) {
         String[] maze = {
             "XXXXXXX",
-            "XI...KX",
-            "X.....X",
+            "XI....X",
+            "X.K...X",
             "X.X.XGX",
             "XXXXXXX"
             // "XXXXXXX",
@@ -136,7 +140,7 @@ public class Pathfinder {
             // "XXXXXXX"
         };
         MazeProblem prob = new MazeProblem(maze);
-        System.out.println(Pathfinder.goFromTo(prob.INITIAL_STATE, prob.KEY_STATE, prob));
+        System.out.println(Pathfinder.solve(prob));
 
         String[] maze1 = {
             "XXXXXXX",
@@ -146,7 +150,7 @@ public class Pathfinder {
             "XXXXXXX"
         };
         MazeProblem prob1 = new MazeProblem(maze1);
-        System.out.println(Pathfinder.goFromTo(prob1.INITIAL_STATE, prob1.KEY_STATE, prob1));
+        System.out.println(Pathfinder.solve(prob1));
 
         String[] maze2 = {
             "XXXXXXX",
@@ -156,7 +160,17 @@ public class Pathfinder {
             "XXXXXXX"
         };
         MazeProblem prob2 = new MazeProblem(maze2);
-        System.out.println(Pathfinder.goFromTo(prob2.INITIAL_STATE, prob2.KEY_STATE, prob2));
+        System.out.println(Pathfinder.solve(prob2));
+
+        // String[] maze2 = {
+        //     "XXXXXXX",
+        //     "XI.G..X",
+        //     "X.MMMGX",
+        //     "X.XKX.X",
+        //     "XXXXXXX"
+        // };
+        // MazeProblem prob2 = new MazeProblem(maze2);
+        // System.out.println(Pathfinder.goFromTo(prob2.INITIAL_STATE, prob2.KEY_STATE, prob2));
         // System.out.println( "Distance from (2,1) to (5,1): " + prob.distance( new MazeState(2,1), new MazeState(5,1)));
         // System.out.println( "Distance from (1,2) to (5,1): " + prob.distance( new MazeState(1,2), new MazeState(5,1)));
 
