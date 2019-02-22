@@ -129,8 +129,8 @@ public class Pathfinder {
     public static void main(String args[]) {
         String[] maze = {
             "XXXXXXX",
-            "XI....X",
-            "X.K...X",
+            "XI.M.KX",
+            "X.....X",
             "X.X.XGX",
             "XXXXXXX"
             // "XXXXXXX",
