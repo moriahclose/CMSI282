@@ -1,6 +1,7 @@
 package nim;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -22,7 +23,28 @@ public class NimPlayer {
      *          of [1, MAX_REMOVAL]
      */
     public int choose (int remaining) {
-        throw new UnsupportedOperationException();
+        Map<GameTreeNode, Integer> visited = new HashMap<>();
+//    	GameTreeNode root = new GameTreeNode( remaining, 0, true );
+//    	System.out.println( "Performing AB on " + root);
+        Map<GameTreeNode, Integer> children = new HashMap<>();
+        
+        for ( int action = 1; action <= MAX_REMOVAL && remaining-action >= 0; action++ ) {
+        	GameTreeNode child = new GameTreeNode( remaining-action, action, false );
+        	child.score = alphaBetaMinimax( child, Integer.MIN_VALUE, Integer.MAX_VALUE, false, visited );
+        	children.put( child, child.score );
+//        	System.out.println( "Child " + child + " score: " + children.get(child));
+        }
+        
+        GameTreeNode maxNode = new GameTreeNode(1, 1, false);
+        
+        for ( Map.Entry<GameTreeNode, Integer> child : children.entrySet() ) {
+        	
+        	maxNode = ( Math.max(maxNode.score, child.getValue()) == child.getValue() ) ? child.getKey() : maxNode;
+        }
+        return maxNode.action;
+//    	GameTreeNode root = new GameTreeNode( remaining, 0, true );
+//    	System.out.println( "AB with " + remaining + " remaining: " + alphaBetaMinimax(root, Integer.MIN_VALUE, Integer.MAX_VALUE, true, visited) );
+//    	return alphaBetaMinimax(root, Integer.MIN_VALUE, Integer.MAX_VALUE, true, visited);
     }
     
     /**
@@ -37,7 +59,42 @@ public class NimPlayer {
      *          from the given node
      */
     private int alphaBetaMinimax (GameTreeNode node, int alpha, int beta, boolean isMax, Map<GameTreeNode, Integer> visited) {
-        throw new UnsupportedOperationException();
+    	if ( node.remaining == 0 ) {
+    		int v = (isMax) ? 0 : 1;
+//    		System.out.println( "Terminal node v: " + v);
+    		return (isMax) ? 0 : 1;
+    	}
+    	    	
+    	if (isMax) {
+    		int v = Integer.MIN_VALUE;
+    		for ( int action = 1; action <= MAX_REMOVAL && node.remaining-action >= 0; action++ ) {
+    			GameTreeNode child = new GameTreeNode(node.remaining - action, action, false);
+//            	System.out.println( "     Parent: " + node + " Child " + child);
+				v = Math.max( v , alphaBetaMinimax(child, alpha, beta, false, visited) );
+				alpha = Math.max(alpha, v);
+				if ( beta <= alpha ) {
+					break;
+				}
+    		}
+//    		visited.put(node, v);
+//    		System.out.println( "max node v: " + v);
+    		return v;
+    	} else {
+    		int v = Integer.MAX_VALUE;
+    		for ( int action = 1; action <= MAX_REMOVAL && node.remaining-action >= 0; action++ ) {
+    			GameTreeNode child = new GameTreeNode(node.remaining - action, action, true);
+//            	System.out.println( "     Parent: " + node + " Child " + child);
+				v = Math.min( v , alphaBetaMinimax(child, alpha, beta, true, visited) );
+				beta = Math.min(beta, v);
+				if ( beta <= alpha ) {
+					break;
+				}
+    		}
+//    		visited.put(node, v);
+//    		System.out.println("min node v: " + v);
+    		return v;
+    	}
+    	
     }
 
 }
@@ -83,6 +140,10 @@ class GameTreeNode {
     @Override
     public int hashCode () {
         return remaining + ((isMax) ? 1 : 0);
+    }
+    
+    public String toString () {
+    	return "[rem: " + remaining + ", action: " + action + ", isMax: " + isMax + "]";
     }
     
 }
