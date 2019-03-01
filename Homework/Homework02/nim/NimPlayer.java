@@ -1,3 +1,8 @@
+/**********************************
+ * Author: Moriah Tolliver
+ * Last Edit Made: 2/28/2019
+ **********************************/
+
 package nim;
 
 import java.util.ArrayList;
@@ -17,34 +22,48 @@ public class NimPlayer {
     }
     
     /**
+     * Get children resulting from all possible actions mapped with their minimax scores
+     * @param remaining int to get children from
+     * @return Map<GameTreeNode, Integer> of children mapped to their minimax scores
+     */
+    public Map<GameTreeNode, Integer> getChildren( int remaining ) {
+        Map<GameTreeNode, Integer> visited = new HashMap<>();
+    	Map<GameTreeNode, Integer> children = new HashMap<>();
+        
+        for ( int action = 1; action <= MAX_REMOVAL && remaining-action >= 0; action++ ) {
+        	GameTreeNode child = new GameTreeNode( remaining-action, action, false );
+        	child.score = alphaBetaMinimax( child, Integer.MIN_VALUE, Integer.MAX_VALUE, false, visited );
+        	children.put( child, child.score );
+        }
+        
+        return children;
+    }
+    
+    /**
+     * Returns best action for player to take given a class of nodes to analyze the actions of
+     * @param nodes to look for best action from
+     * @return int number of stones to take
+     */
+    public int getBestAction( Map<GameTreeNode, Integer> nodes ) {
+        GameTreeNode maxNode = new GameTreeNode(1, 1, false);
+
+    	for ( Map.Entry<GameTreeNode, Integer> node : nodes.entrySet() ) {
+        	
+        	maxNode = ( Math.max(maxNode.score, node.getValue()) == node.getValue() ) ? node.getKey() : maxNode;
+        }
+    	
+    	return maxNode.action;
+    }
+    
+    /**
      * 
      * @param   remaining   Integer representing the amount of stones left in the pile
      * @return  An int action representing the number of stones to remove in the range
      *          of [1, MAX_REMOVAL]
      */
     public int choose (int remaining) {
-        Map<GameTreeNode, Integer> visited = new HashMap<>();
-//    	GameTreeNode root = new GameTreeNode( remaining, 0, true );
-//    	System.out.println( "Performing AB on " + root);
-        Map<GameTreeNode, Integer> children = new HashMap<>();
-        
-        for ( int action = 1; action <= MAX_REMOVAL && remaining-action >= 0; action++ ) {
-        	GameTreeNode child = new GameTreeNode( remaining-action, action, false );
-        	child.score = alphaBetaMinimax( child, Integer.MIN_VALUE, Integer.MAX_VALUE, false, visited );
-        	children.put( child, child.score );
-//        	System.out.println( "Child " + child + " score: " + children.get(child));
-        }
-        
-        GameTreeNode maxNode = new GameTreeNode(1, 1, false);
-        
-        for ( Map.Entry<GameTreeNode, Integer> child : children.entrySet() ) {
-        	
-        	maxNode = ( Math.max(maxNode.score, child.getValue()) == child.getValue() ) ? child.getKey() : maxNode;
-        }
-        return maxNode.action;
-//    	GameTreeNode root = new GameTreeNode( remaining, 0, true );
-//    	System.out.println( "AB with " + remaining + " remaining: " + alphaBetaMinimax(root, Integer.MIN_VALUE, Integer.MAX_VALUE, true, visited) );
-//    	return alphaBetaMinimax(root, Integer.MIN_VALUE, Integer.MAX_VALUE, true, visited);
+        Map<GameTreeNode, Integer> children = getChildren( remaining );
+        return getBestAction( children );
     }
     
     /**
@@ -64,8 +83,6 @@ public class NimPlayer {
     	}
     	
     	if ( node.remaining == 0 ) {
-    		int v = (isMax) ? 0 : 1;
-//    		System.out.println( "Terminal node v: " + v);
     		return (isMax) ? 0 : 1;
     	}
     	    	
@@ -73,7 +90,6 @@ public class NimPlayer {
     		int v = Integer.MIN_VALUE;
     		for ( int action = 1; action <= MAX_REMOVAL && node.remaining-action >= 0; action++ ) {
     			GameTreeNode child = new GameTreeNode(node.remaining - action, action, false);
-//            	System.out.println( "     Parent: " + node + " Child " + child);
 				v = Math.max( v , alphaBetaMinimax(child, alpha, beta, false, visited) );
 				alpha = Math.max(alpha, v);
 				if ( beta <= alpha ) {
@@ -81,13 +97,11 @@ public class NimPlayer {
 				}
     		}
     		visited.put(node, v);
-//    		System.out.println( "max node v: " + v);
     		return v;
     	} else {
     		int v = Integer.MAX_VALUE;
     		for ( int action = 1; action <= MAX_REMOVAL && node.remaining-action >= 0; action++ ) {
     			GameTreeNode child = new GameTreeNode(node.remaining - action, action, true);
-//            	System.out.println( "     Parent: " + node + " Child " + child);
 				v = Math.min( v , alphaBetaMinimax(child, alpha, beta, true, visited) );
 				beta = Math.min(beta, v);
 				if ( beta <= alpha ) {
@@ -95,7 +109,6 @@ public class NimPlayer {
 				}
     		}
     		visited.put(node, v);
-//    		System.out.println("min node v: " + v);
     		return v;
     	}
     	
