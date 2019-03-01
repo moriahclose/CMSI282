@@ -8,7 +8,7 @@ import java.util.Scanner;
  */
 public class NimGame {
     
-    public static final int MAX_REMOVAL = 3, INIT_STATE = 7;
+    public static final int MAX_REMOVAL = 3, INIT_STATE = 12;
     
     public static void main (String[] args) {
         Scanner input = new Scanner(System.in);
