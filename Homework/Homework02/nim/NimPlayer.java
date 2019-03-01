@@ -59,6 +59,10 @@ public class NimPlayer {
      *          from the given node
      */
     private int alphaBetaMinimax (GameTreeNode node, int alpha, int beta, boolean isMax, Map<GameTreeNode, Integer> visited) {
+    	if ( visited.containsKey(node) ) { //return score of previously calculated node
+    		return visited.get(node);
+    	}
+    	
     	if ( node.remaining == 0 ) {
     		int v = (isMax) ? 0 : 1;
 //    		System.out.println( "Terminal node v: " + v);
@@ -76,7 +80,7 @@ public class NimPlayer {
 					break;
 				}
     		}
-//    		visited.put(node, v);
+    		visited.put(node, v);
 //    		System.out.println( "max node v: " + v);
     		return v;
     	} else {
@@ -90,7 +94,7 @@ public class NimPlayer {
 					break;
 				}
     		}
-//    		visited.put(node, v);
+    		visited.put(node, v);
 //    		System.out.println("min node v: " + v);
     		return v;
     	}
