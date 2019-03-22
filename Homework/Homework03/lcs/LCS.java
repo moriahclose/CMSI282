@@ -56,8 +56,6 @@ public class LCS {
     			}
     		}
     	}
-    	
-    	print2DArray(memoTable);
     	return memoTable;
     }
     
@@ -84,14 +82,40 @@ public class LCS {
      *         [Side Effect] sets memoCheck to refer to table  
      */
     public static Set<String> topDownLCS (String rStr, String cStr) {
-        throw new UnsupportedOperationException();
+//        throw new UnsupportedOperationException();
+    	memoCheck = topDownTableFill(rStr, cStr, new int[rStr.length()+1][cStr.length()+1]);
+    	return new HashSet<>(Arrays.asList(
+                "A"
+            ));
     }
     
     // [!] TODO: Add any top-down specific helpers here!
     
+    public static int[][] topDownTableFill( String s1, String s2, int[][] inputTable) {
+    	int[][] memoTable = inputTable;
+    	
+    	if ( s1.length() == 0 || s2.length() == 0 ) {
+    		memoTable[s1.length()][s2.length()] = 0;
+    	} else if ( lastChar(s1) == lastChar(s2) ) {
+    		memoTable[s1.length()][s2.length()] = 1 + topDownTableFill( removeLastChar(s1), removeLastChar(s2), memoTable)[s1.length()-1][s2.length()-1];
+    	} else {
+    		memoTable[s1.length()][s2.length()] = Math.max( topDownTableFill( removeLastChar(s1), s2, memoTable)[s1.length()-1][s2.length()], topDownTableFill( s1, removeLastChar(s2), memoTable)[s1.length()][s2.length()-1]);
+    	}
+    	
+    	return memoTable;
+    }
+    
+    public static char lastChar(String s) {
+    	return s.charAt(s.length()-1);
+    }
+    
+    public static String removeLastChar(String s) {
+    	return s.substring(0, s.length()-1);
+    }
+    
     public static void main(String args[]) {
-    	LCS l = new LCS();
-    	l.bottomUpTableFill("", "");
+//    	LCS l = new LCS();
+//    	l.topDownTableFill("ABA", "BAA", new int[4][4]);
     }
     
 }
