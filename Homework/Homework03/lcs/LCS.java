@@ -96,6 +96,8 @@ public class LCS {
     	
     	if ( s1.length() == 0 || s2.length() == 0 ) {
     		memoTable[s1.length()][s2.length()] = 0;
+    	} else if ( memoTable[s1.length()][s2.length()] != 0 ) {
+    		//do nothing because this square has already been calculated
     	} else if ( lastChar(s1) == lastChar(s2) ) {
     		memoTable[s1.length()][s2.length()] = 1 + topDownTableFill( removeLastChar(s1), removeLastChar(s2), memoTable)[s1.length()-1][s2.length()-1];
     	} else {
