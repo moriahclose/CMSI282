@@ -1,8 +1,6 @@
 package lcs;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class LCS {
     
@@ -19,7 +17,47 @@ public class LCS {
     
     // [!] TODO: Add your shared helper methods here!
     
-
+    public static void print2DArray( int[][] a ) {
+    	for ( int i = 0; i < a.length; i++) {
+    		for  (int j = 0; j < a[0].length; j++ ) {
+    			System.out.print(a[i][j] + " ");
+    		}
+    		System.out.println();
+    	}
+    }
+    
+    public static char lastChar(String s) {
+    	return s.charAt(s.length()-1);
+    }
+    
+    public static String removeLastChar(String s) {
+    	return s.substring(0, s.length()-1);
+    }
+    
+    public static HashSet<String> collectSolution( String rStr, String cStr, int[][] memo ) {
+    	if ( rStr.length() == 0 || cStr.length() == 0 ) {
+    		return new HashSet<String>( Arrays.asList( "" ) );
+    	} 
+    	
+    	HashSet<String> result = new HashSet<>();
+    	if ( lastChar(rStr) == lastChar(cStr) ) {
+    		for( String substr : collectSolution( removeLastChar(rStr), removeLastChar(cStr), memo ) ) {
+    			result.add( substr + lastChar(rStr) );
+    		}
+    	} else {
+    		
+    		if ( memo[rStr.length()-1][cStr.length()] >= memo[rStr.length()][cStr.length()-1] ) {
+        		result.addAll( collectSolution(rStr, removeLastChar(cStr), memo) );
+        	} 
+        	
+        	if ( memo[rStr.length()][cStr.length()-1] >= memo[rStr.length()-1][cStr.length()] ) {
+        		result.addAll( collectSolution(removeLastChar(rStr), cStr, memo) );
+        	}
+    	}
+    	
+    	return result;
+    }
+    
     // -----------------------------------------------
     // Bottom-Up LCS
     // -----------------------------------------------
@@ -36,9 +74,7 @@ public class LCS {
     public static Set<String> bottomUpLCS (String rStr, String cStr) {
 //        throw new UnsupportedOperationException();
     	memoCheck = bottomUpTableFill(rStr, cStr);
-    	return new HashSet<>(Arrays.asList(
-                "A"
-            ));
+    	return collectSolution( rStr, cStr, memoCheck);
     }
     
     // [!] TODO: Add any bottom-up specific helpers here!
@@ -59,15 +95,6 @@ public class LCS {
     	return memoTable;
     }
     
-    
-    public static void print2DArray( int[][] a ) {
-    	for ( int i = 0; i < a.length; i++) {
-    		for  (int j = 0; j < a[0].length; j++ ) {
-    			System.out.print(a[i][j] + " ");
-    		}
-    		System.out.println();
-    	}
-    }
     // -----------------------------------------------
     // Top-Down LCS
     // -----------------------------------------------
@@ -84,9 +111,7 @@ public class LCS {
     public static Set<String> topDownLCS (String rStr, String cStr) {
 //        throw new UnsupportedOperationException();
     	memoCheck = topDownTableFill(rStr, cStr, new int[rStr.length()+1][cStr.length()+1]);
-    	return new HashSet<>(Arrays.asList(
-                "A"
-            ));
+    	return collectSolution( rStr, cStr, memoCheck);
     }
     
     // [!] TODO: Add any top-down specific helpers here!
@@ -107,17 +132,10 @@ public class LCS {
     	return memoTable;
     }
     
-    public static char lastChar(String s) {
-    	return s.charAt(s.length()-1);
-    }
-    
-    public static String removeLastChar(String s) {
-    	return s.substring(0, s.length()-1);
-    }
-    
     public static void main(String args[]) {
 //    	LCS l = new LCS();
-//    	l.topDownTableFill("ABA", "BAA", new int[4][4]);
+////    	l.topDownTableFill("ABA", "BAA", new int[4][4]);
+//    	HashSet<String> b = new HashSet<>(Arrays.asList("hey", "there", "sir"));
     }
     
 }
