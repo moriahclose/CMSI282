@@ -1,3 +1,6 @@
+/******************************************
+ * Authors: Moriah Tolliver, Justin Wiggins
+ ******************************************/
 package lcs;
 
 import static org.junit.Assert.*;
@@ -17,6 +20,9 @@ public class LCSTests {
             )),
             LCS.bottomUpLCS("", "")
         );
+    	assertArrayEquals(
+    		new int[][] {{0}}, LCS.memoCheck
+    			);
         // LCS.memoCheck can either be the 1 element matrix
         // or null -- up to you, I won't check for cases with
         // empty-String arguments
@@ -96,6 +102,102 @@ public class LCSTests {
         );
     }
     
+  @Test
+  public void BULCSTest_t5() {
+      assertEquals(
+          new HashSet<>(Arrays.asList(
+              "BCA", "CBA"
+          )),
+          LCS.bottomUpLCS("BCBA", "CBCA")
+      );
+      assertArrayEquals(
+          new int[][] {
+              {0, 0, 0, 0, 0},
+              {0, 0, 1, 1, 1},
+              {0, 1, 1, 2, 2},
+              {0, 1, 2, 2, 2},
+              {0, 1, 2, 2, 3}
+          },
+          LCS.memoCheck
+      );
+  }
+  
+  @Test 
+  public void BULCSTest_t6() {
+  	assertEquals(
+  			new HashSet<>(Arrays.asList(
+              "ANGES"
+          )),
+          LCS.bottomUpLCS("RANGES", "CHANGES")
+      );
+  	assertArrayEquals(
+  		new int[][] {
+  			{0,0,0,0,0,0,0,0},
+  			{0,0,0,0,0,0,0,0},
+  			{0,0,0,1,1,1,1,1},
+  			{0,0,0,1,2,2,2,2},
+  			{0,0,0,1,2,3,3,3},
+  			{0,0,0,1,2,3,4,4},
+  			{0,0,0,1,2,3,4,5}
+  		}, LCS.memoCheck
+  			);
+  }
+  
+  @Test
+  public void BULCSTest_t7() {
+  	assertEquals(
+  			new HashSet<>(Arrays.asList(
+              "RS"
+          )),
+  		LCS.bottomUpLCS("RUNS", "ERRORS")
+      );
+  	assertArrayEquals(
+  		new int[][] {
+  			{0,0,0,0,0,0,0},
+  			{0,0,1,1,1,1,1},
+  			{0,0,1,1,1,1,1},
+  			{0,0,1,1,1,1,1},
+  			{0,0,1,1,1,1,2},
+  		}, LCS.memoCheck
+  			);
+  }
+  
+  @Test
+  public void BULCSTest_t8() {
+  	assertEquals(
+  			new HashSet<>(Arrays.asList(
+              "ST"
+          )),
+  		LCS.bottomUpLCS("DESFT", "ABSCT")
+      );
+  	assertArrayEquals(
+  		new int[][] {
+  			{0,0,0,0,0,0},
+  			{0,0,0,0,0,0},
+  			{0,0,0,0,0,0},
+  			{0,0,0,1,1,1},
+  			{0,0,0,1,1,1},
+  			{0,0,0,1,1,2},
+  		}, LCS.memoCheck
+  			);
+  }
+  
+  @Test
+  public void BULCSTest_t9() {
+  	assertEquals(
+  			new HashSet<>(Arrays.asList(
+              "RS"
+          )),
+  		LCS.bottomUpLCS("RS", "RSS")
+      );
+  	assertArrayEquals(
+  		new int[][] {
+  			{0,0,0,0},
+  			{0,1,1,1},
+  			{0,1,2,2}
+  		}, LCS.memoCheck
+  			);
+  }
     
     // Top-Down LCS Tests
     // -----------------------------------------------
@@ -107,6 +209,10 @@ public class LCSTests {
             )),
             LCS.topDownLCS("", "")
         );
+    	assertArrayEquals(
+    		new int[][] {
+    			{0}
+    		}, LCS.memoCheck );
         // LCS.memoCheck can either be the 1 element matrix
         // or null -- up to you, I won't check for cases with
         // empty-String arguments
@@ -184,4 +290,24 @@ public class LCSTests {
         );
     }
     
+    @Test
+    public void TDLCSTest_t5() {
+    	assertEquals(
+    			new HashSet<>(Arrays.asList(
+                "ANGES"
+            )),
+            LCS.topDownLCS("RANGES", "CHANGES")
+        );
+    	assertArrayEquals(
+    		new int[][] {
+    			{0,0,0,0,0,0,0,0},
+    			{0,0,0,0,0,0,0,0},
+    			{0,0,0,1,0,0,0,0},
+    			{0,0,0,0,2,0,0,0},
+    			{0,0,0,0,0,3,0,0},
+    			{0,0,0,0,0,0,4,0},
+    			{0,0,0,0,0,0,0,5},
+    		}, LCS.memoCheck
+    			);
+    }
 }
