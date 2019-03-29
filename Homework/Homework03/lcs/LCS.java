@@ -45,26 +45,27 @@ public class LCS {
      */
     public static HashSet<String> collectSolution( String rStr, String cStr, int[][] memo ) {
     	if ( rStr.length() == 0 || cStr.length() == 0 ) {
-    		return new HashSet<String>( Arrays.asList( "" ) );
-    	} 
-    	
-    	HashSet<String> result = new HashSet<>();
-    	if ( lastChar(rStr) == lastChar(cStr) ) {
-    		for( String substr : collectSolution( removeLastChar(rStr), removeLastChar(cStr), memo ) ) {
-    			result.add( substr + lastChar(rStr) );
-    		}
-    	} else {
-    		
-    		if ( memo[rStr.length()-1][cStr.length()] >= memo[rStr.length()][cStr.length()-1] ) {
-        		result.addAll( collectSolution(rStr, removeLastChar(cStr), memo) );
-        	} 
-        	
-        	if ( memo[rStr.length()][cStr.length()-1] >= memo[rStr.length()-1][cStr.length()] ) {
-        		result.addAll( collectSolution(removeLastChar(rStr), cStr, memo) );
-        	}
+    		return new HashSet<>(Arrays.asList(""));
     	}
     	
-    	return result;
+    	if (lastChar(rStr) == lastChar(cStr)) {
+    		HashSet<String> result = new HashSet<>();
+    		for (String substring : collectSolution(removeLastChar(rStr), removeLastChar(cStr), memo) ) {
+    			result.add(substring + lastChar(rStr) );
+    		}
+    		return result;
+    	} 
+    	
+		HashSet<String> result = new HashSet<>();
+		if ( memo[rStr.length()][cStr.length()-1] >= memo[rStr.length()-1][cStr.length()] ) {
+			result.addAll( collectSolution( rStr, removeLastChar(cStr), memo) );
+		}
+		
+		if ( memo[rStr.length()-1][cStr.length()] >= memo[rStr.length()][cStr.length()-1] ) {
+			result.addAll( collectSolution( removeLastChar(rStr), cStr, memo) );
+		}
+		
+		return result;
     }
     
     // -----------------------------------------------
@@ -122,31 +123,34 @@ public class LCS {
      *         [Side Effect] sets memoCheck to refer to table  
      */
     public static Set<String> topDownLCS (String rStr, String cStr) {
-    	memoCheck = topDownTableFill(rStr, cStr, new int[rStr.length()+1][cStr.length()+1]);
+    	ArrayList<String> visited = new ArrayList<>();
+    	memoCheck = topDownTableFill(rStr, cStr, new int[rStr.length()+1][cStr.length()+1], visited);
     	return collectSolution( rStr, cStr, memoCheck);
     }
-    
-    // [!] TODO: Add any top-down specific helpers here!
-    
+        
     /**
      * Fills the memoization table using top-down dynamic programming
      * @param rStr The String found along the table's rows
      * @param cStr The String found along the table's cols
+     * @param visited ArrayList of Strings for which the sub-solution has already been found (stored as "rStr|cStr")
      * @return 2D array containing the memoized values
      */
-    public static int[][] topDownTableFill( String s1, String s2, int[][] inputTable) {
+    public static int[][] topDownTableFill( String rStr, String cStr, int[][] inputTable, ArrayList<String> visited) {
     	int[][] memoTable = inputTable;
     	
-    	if ( s1.length() == 0 || s2.length() == 0 ) {
-    		memoTable[s1.length()][s2.length()] = 0;
-    	} else if ( memoTable[s1.length()][s2.length()] != 0 ) {
-    		//do nothing because this square has already been calculated
-    	} else if ( lastChar(s1) == lastChar(s2) ) {
-    		memoTable[s1.length()][s2.length()] = 1 + topDownTableFill( removeLastChar(s1), removeLastChar(s2), memoTable)[s1.length()-1][s2.length()-1];
-    	} else {
-    		memoTable[s1.length()][s2.length()] = Math.max( topDownTableFill( removeLastChar(s1), s2, memoTable)[s1.length()-1][s2.length()], topDownTableFill( s1, removeLastChar(s2), memoTable)[s1.length()][s2.length()-1]);
+    	if ( visited.contains(rStr + "|" + cStr) ) {
+    		return memoTable;
     	}
     	
+    	if ( rStr.length() == 0 || cStr.length() == 0 ) {
+    		memoTable[rStr.length()][cStr.length()] = 0;
+    	} else if ( lastChar(rStr) == lastChar(cStr) ) {
+    		memoTable[rStr.length()][cStr.length()] = 1 + topDownTableFill( removeLastChar(rStr), removeLastChar(cStr), memoTable, visited)[rStr.length()-1][cStr.length()-1];
+    	} else {
+    		memoTable[rStr.length()][cStr.length()] = Math.max( topDownTableFill( removeLastChar(rStr), cStr, memoTable, visited)[rStr.length()-1][cStr.length()], topDownTableFill( rStr, removeLastChar(cStr), memoTable, visited)[rStr.length()][cStr.length()-1]);
+    	}
+    	
+    	visited.add(rStr + "|" + cStr);
     	return memoTable;
     }
     
