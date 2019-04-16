@@ -128,6 +128,20 @@ public class Huffman {
     	}
     	    	
     }
+    
+    /**
+     * Creates bit string of message using encoding map without padded 0s
+     * @param corpus String to get bitString of
+     * @return String representing bits needed to represent corpus
+     */
+    public String getBitString(String corpus) {
+    	String bitString = "";
+    	for ( int i = 0; i < corpus.length(); i++ ) {
+    		bitString += encodingMap.get( corpus.charAt(i) );
+    	}
+    	return bitString;
+    }
+    
     /**
      * Compresses the given String message / text corpus into its Huffman coded
      * bitstring, as represented by an array of bytes. Uses the encodingMap
