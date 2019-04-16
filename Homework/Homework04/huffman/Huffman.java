@@ -1,6 +1,6 @@
 package huffman;
 
-import java.util.Map;
+import java.util.*;
 
 /**
  * Huffman instances provide reusable Huffman Encoding Maps for
@@ -8,13 +8,32 @@ import java.util.Map;
  * distributions of characters.
  */
 public class Huffman {
-    
+	    
     // -----------------------------------------------
     // Construction
     // -----------------------------------------------
 
     private HuffNode trieRoot;
     private Map<Character, String> encodingMap;
+    
+    private char NULL_CHAR = '\0';
+    
+    // ------------------------------------------------------------
+    // HELPER METHODS TO DELETE
+    // ------------------------------------------------------------
+    public void printTrie(HuffNode root) {
+    	if ( root.isLeaf() ) {
+        	System.out.println("<" + root.character + "," + root.count + ">");
+    	} else {
+    		printTrie(root.left);
+        	System.out.println("<" + root.character + "," + root.count + ">");
+        	printTrie(root.right);
+    	}
+    }
+    
+    public HuffNode getRoot() {
+    	return trieRoot;
+    }
     
     /**
      * Creates the Huffman Trie and Encoding Map using the character
@@ -26,7 +45,7 @@ public class Huffman {
      *        differ.
      */
     Huffman (String corpus) {
-        // TODO!
+        trieRoot = new HuffNode(NULL_CHAR, corpus.length());
     }
     
     
@@ -34,6 +53,56 @@ public class Huffman {
     // Compression
     // -----------------------------------------------
     
+    /**
+     * Creates HashMap of character frequencies
+     * @param corpus String
+     * @return Map with chars as keys and frequencies as values
+     */
+    public HashMap<Character, Integer> charFrequencies(String corpus) {
+    	HashMap<Character, Integer> frequencies = new HashMap<>();
+    	
+    	for (int i = 0; i < corpus.length(); i++) {
+    		 char currentChar = corpus.charAt(i);
+    		 if ( frequencies.containsKey( currentChar ) ) {
+    			 frequencies.replace(currentChar, frequencies.get(currentChar)+1 );
+    		 } else {
+    			 frequencies.put(currentChar, 1);
+    		 }
+    	}
+    	return frequencies;
+    }
+    
+    /**
+     * Creates Huffman Trie and changes root of Huffman object
+     * @param String corpus to construct trie from
+     */
+    public void makeTrie(String corpus) {
+    	HashMap<Character, Integer> frequencies = this.charFrequencies(corpus);
+    	PriorityQueue<HuffNode> pq = new PriorityQueue<>();
+    	
+    	for ( Map.Entry<Character, Integer> frequency : frequencies.entrySet() ) {
+    		pq.add( new HuffNode(frequency.getKey(), frequency.getValue()) );
+    	}
+
+    	while( pq.size() > 1 ) {
+    		HuffNode childOne = pq.poll();
+    		HuffNode childTwo = pq.poll();
+    		HuffNode parent = new HuffNode(NULL_CHAR, childOne.count + childTwo.count);
+    		parent.left = childOne;
+    		parent.right = childTwo;
+    		pq.add(parent);
+    	}
+    	
+    	trieRoot = pq.poll();
+    }
+    
+    /**
+     * Sets encodingMap 
+     * @param HuffNode subtree root to start recursion from
+     */
+    public void setEncodingMap() {
+    	
+    }
     /**
      * Compresses the given String message / text corpus into its Huffman coded
      * bitstring, as represented by an array of bytes. Uses the encodingMap
