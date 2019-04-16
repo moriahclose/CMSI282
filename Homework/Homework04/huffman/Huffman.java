@@ -1,6 +1,7 @@
 package huffman;
 
 import java.util.*;
+import java.io.*;
 
 /**
  * Huffman instances provide reusable Huffman Encoding Maps for
@@ -154,7 +155,21 @@ public class Huffman {
      *         0-padding on the final byte.
      */
     public byte[] compress (String message) {
-        throw new UnsupportedOperationException();
+    	ByteArrayOutputStream compressed = new ByteArrayOutputStream();
+    	compressed.write(message.length());
+    	
+    	String bitString = getBitString(message);
+    	while (bitString.length() >= 8) { 								 // add each byte to the byte array
+        	int parsed = Integer.parseInt(bitString.substring(0, 8), 2); // get unsigned int representation of byte
+    		compressed.write( (byte)parsed );							 // add signed byte represntation to array
+    		bitString = bitString.substring(8);
+    	}
+    	
+       	int padLength = 8 - bitString.length();
+       	int parsed = Integer.parseInt(bitString, 2);
+    	
+    	compressed.write( (byte)parsed<<padLength );
+    	return compressed.toByteArray();
     }
     
     
