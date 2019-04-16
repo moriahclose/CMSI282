@@ -35,6 +35,16 @@ public class Huffman {
     	return trieRoot;
     }
     
+    public void printMap() {
+    	for(Map.Entry<Character, String> m : encodingMap.entrySet()) {
+    		System.out.println("[" + m.getKey() + "," + m.getValue() + "]");
+    	}
+    }
+    
+    public Map<Character, String> getEncodingMap() {
+    	return encodingMap;
+    }
+        
     /**
      * Creates the Huffman Trie and Encoding Map using the character
      * distributions in the given text corpus
@@ -46,6 +56,10 @@ public class Huffman {
      */
     Huffman (String corpus) {
         trieRoot = new HuffNode(NULL_CHAR, corpus.length());
+        encodingMap = new HashMap<Character, String>();
+        
+        setTrie(corpus);
+        setEncodingMap(getRoot(), "");
     }
     
     
@@ -76,7 +90,7 @@ public class Huffman {
      * Creates Huffman Trie and changes root of Huffman object
      * @param String corpus to construct trie from
      */
-    public void makeTrie(String corpus) {
+    public void setTrie(String corpus) {
     	HashMap<Character, Integer> frequencies = this.charFrequencies(corpus);
     	PriorityQueue<HuffNode> pq = new PriorityQueue<>();
     	
@@ -100,8 +114,19 @@ public class Huffman {
      * Sets encodingMap 
      * @param HuffNode subtree root to start recursion from
      */
-    public void setEncodingMap() {
+    public void setEncodingMap(HuffNode root, String bitString) {
+    	if( root.left.isLeaf() ) {
+    		this.encodingMap.put(root.left.character, bitString + "0");
+    	} else {
+        	setEncodingMap(root.left, bitString + "0");
+    	}
     	
+    	if (root.right.isLeaf() ) {
+    		this.encodingMap.put(root.right.character, bitString + "1");
+    	} else {
+        	setEncodingMap(root.right, bitString + "1");
+    	}
+    	    	
     }
     /**
      * Compresses the given String message / text corpus into its Huffman coded
