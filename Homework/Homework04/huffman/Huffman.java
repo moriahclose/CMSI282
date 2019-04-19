@@ -161,7 +161,7 @@ public class Huffman {
     	String bitString = getBitString(message);
     	while (bitString.length() >= 8) { 								 // add each byte to the byte array
         	int parsed = Integer.parseInt(bitString.substring(0, 8), 2); // get unsigned int representation of byte
-    		compressed.write( (byte)parsed );							 // add signed byte represntation to array
+    		compressed.write( (byte)parsed );							 // add signed byte representation to array
     		bitString = bitString.substring(8);
     	}
     	
@@ -178,6 +178,32 @@ public class Huffman {
     // -----------------------------------------------
     
     /**
+     * Returns string of bits for compressed byte[]
+     * @param byte[] compressed message
+     * @return String representation of bytes in array
+     */
+    public String compressedString( byte[] compressed ) {
+    	String compressedStr = "";
+    	
+    	for ( int i = 1; i < compressed.length; i++) {
+    		String addOn = "";
+    		if (compressed[i] < 0) {
+    			String twosComplement = Integer.toBinaryString(compressed[i]);
+    			addOn = twosComplement.substring( twosComplement.length() - 8, twosComplement.length());
+    		} else {
+    			addOn = Integer.toString(compressed[i], 2);
+    		}
+    		
+    		while (addOn.length() < 8) {
+    			addOn = "0" + addOn; 
+    		}
+    		compressedStr += addOn;
+    	}
+    	
+    	return compressedStr;
+    }
+    
+    /**
      * Decompresses the given compressed array of bytes into their original,
      * String representation. Uses the trieRoot field (the Huffman Trie) that
      * generated the compressed message during decoding.
@@ -189,7 +215,18 @@ public class Huffman {
      * @return Decompressed String representation of the compressed bytecode message.
      */
     public String decompress (byte[] compressedMsg) {
-        throw new UnsupportedOperationException();
+    	String decompressed = "";
+    	String format = "";
+    	int numChars = compressedMsg[0];
+
+    	for (int i = 0; i < numChars; i++ ) {
+    		format += "%s";
+    	}
+    	
+    	
+    	System.out.println("Has " + numChars + " chars");
+    	System.out.println(compressedString(compressedMsg));
+    	return decompressed;
     }
     
     
