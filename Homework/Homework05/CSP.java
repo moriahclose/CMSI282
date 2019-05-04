@@ -21,45 +21,47 @@ public class CSP {
 	
 	public static ArrayList<DateVar> nodePreprocess(ArrayList<DateVar> meetings, Set<DateConstraint> constraints) {
 		for (DateConstraint constraint : constraints) {
-    		DateVar newDateVar;
-    		
-            switch (constraint.OP) {
-            case "==": 
-            	if (meetings.get(constraint.L_VAL).dates.contains(((UnaryDateConstraint) constraint).R_VAL)) {
-	            	newDateVar = new DateVar(((UnaryDateConstraint) constraint).R_VAL);
+			if (constraint.arity() == 1) { 
+	    		DateVar newDateVar;
+	    		
+	            switch (constraint.OP) {
+	            case "==": 
+	            	if (meetings.get(constraint.L_VAL).dates.contains(((UnaryDateConstraint) constraint).R_VAL)) {
+		            	newDateVar = new DateVar(((UnaryDateConstraint) constraint).R_VAL);
+		            	meetings.set(constraint.L_VAL, newDateVar);
+	            	} else {
+	            		meetings = null;
+	            	}
+	            	break;
+	            case "!=": 
+	            	newDateVar = meetings.get(constraint.L_VAL);
+	            	newDateVar.remove(((UnaryDateConstraint) constraint).R_VAL);
 	            	meetings.set(constraint.L_VAL, newDateVar);
-            	} else {
-            		meetings = null;
-            	}
-            	break;
-            case "!=": 
-            	newDateVar = meetings.get(constraint.L_VAL);
-            	newDateVar.remove(((UnaryDateConstraint) constraint).R_VAL);
-            	meetings.set(constraint.L_VAL, newDateVar);
-            	break;
-            case ">":  
-            	newDateVar = meetings.get(constraint.L_VAL);
-            	newDateVar.remove(((UnaryDateConstraint) constraint).R_VAL);
-            	newDateVar.removeDatesLessThan(((UnaryDateConstraint) constraint).R_VAL);
-            	meetings.set(constraint.L_VAL, newDateVar);
-            	break;
-            case "<":  
-            	newDateVar = meetings.get(constraint.L_VAL);
-            	newDateVar.remove(((UnaryDateConstraint) constraint).R_VAL);
-            	newDateVar.removeDatesLessThan(((UnaryDateConstraint) constraint).R_VAL);
-            	meetings.set(constraint.L_VAL, newDateVar);
-            	break;
-            case ">=": 
-            	newDateVar = meetings.get(constraint.L_VAL);
-            	newDateVar.removeDatesLessThan(((UnaryDateConstraint) constraint).R_VAL);
-            	meetings.set(constraint.L_VAL, newDateVar);
-            	break;
-            case "<=": 
-            	newDateVar = meetings.get(constraint.L_VAL);
-            	newDateVar.removeDatesGreaterThan(((UnaryDateConstraint) constraint).R_VAL);
-            	meetings.set(constraint.L_VAL, newDateVar);
-            	break;
-            }
+	            	break;
+	            case ">":  
+	            	newDateVar = meetings.get(constraint.L_VAL);
+	            	newDateVar.remove(((UnaryDateConstraint) constraint).R_VAL);
+	            	newDateVar.removeDatesLessThan(((UnaryDateConstraint) constraint).R_VAL);
+	            	meetings.set(constraint.L_VAL, newDateVar);
+	            	break;
+	            case "<":  
+	            	newDateVar = meetings.get(constraint.L_VAL);
+	            	newDateVar.remove(((UnaryDateConstraint) constraint).R_VAL);
+	            	newDateVar.removeDatesLessThan(((UnaryDateConstraint) constraint).R_VAL);
+	            	meetings.set(constraint.L_VAL, newDateVar);
+	            	break;
+	            case ">=": 
+	            	newDateVar = meetings.get(constraint.L_VAL);
+	            	newDateVar.removeDatesLessThan(((UnaryDateConstraint) constraint).R_VAL);
+	            	meetings.set(constraint.L_VAL, newDateVar);
+	            	break;
+	            case "<=": 
+	            	newDateVar = meetings.get(constraint.L_VAL);
+	            	newDateVar.removeDatesGreaterThan(((UnaryDateConstraint) constraint).R_VAL);
+	            	meetings.set(constraint.L_VAL, newDateVar);
+	            	break;
+	            }
+			}
             
     	}
 		return meetings;
