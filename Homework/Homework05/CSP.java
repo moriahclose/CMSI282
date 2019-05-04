@@ -2,6 +2,10 @@ package csp;
 
 import java.time.LocalDate;
 import java.util.Set;
+
+import huffman.Huffman.HuffNode;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,7 +28,42 @@ public class CSP {
      *         indexed by the variable they satisfy, or null if no solution exists.
      */
     public static List<LocalDate> solve (int nMeetings, LocalDate rangeStart, LocalDate rangeEnd, Set<DateConstraint> constraints) {
-        throw new UnsupportedOperationException();
+    	DateVar date = new DateVar(0, rangeStart, rangeEnd);
+       
+        return date.dates;
     }
     
+ // -----------------------------------------------
+    // DateVar Class
+    // -----------------------------------------------
+    
+    /**
+     * DateVar class used to hold meetings and their valid domains.
+     */
+    private static class DateVar {
+        
+        int index;
+        ArrayList<LocalDate> dates;
+        
+        DateVar (int index, LocalDate start, LocalDate end) {
+            this.index = index;
+            this.dates = new ArrayList<>();
+            
+            while (start.until(end).getDays() >= 0) {
+            	dates.add(start);
+            	System.out.print(start + " ") ;
+            	start = start.plusDays(1);
+            }
+            System.out.println();
+        }
+        
+        public boolean remove(LocalDate date) {
+        	return dates.remove(date);
+        }
+        
+        public boolean add(LocalDate date) {
+        	return dates.add(date);
+        }
+        
+    }
 }
