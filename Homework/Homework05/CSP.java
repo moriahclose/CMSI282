@@ -19,6 +19,48 @@ import java.util.Map;
  */
 public class CSP {
 	
+	public static ArrayList<DateVar> arcPreprocess(ArrayList<DateVar> meetings, Set<DateConstraint> constraints) {
+		for (int i = 0; i < meetings.size(); i++) {
+			if (meetings.get(i).dates.size() > 0 ) {
+				meetings.set(i, new DateVar(meetings.get(i).dates.get(0))); // set current meeting to the first date in it's available range
+				
+				ArrayList<DateConstraint> toRemove = new ArrayList<>();
+				ArrayList<DateConstraint> toAdd = new ArrayList<>();
+
+				for (DateConstraint constraint: constraints) {
+					if (constraint.arity() == 2 && i == ((BinaryDateConstraint)constraint).R_VAL) {
+						toRemove.add(constraint);
+						UnaryDateConstraint newConstraint = new UnaryDateConstraint(constraint.L_VAL, constraint.OP, meetings.get(i).dates.get(0));
+						toAdd.add(newConstraint);
+					} else if ( constraint.arity() == 2 && i == constraint.L_VAL ) {
+						toRemove.add(constraint);
+						UnaryDateConstraint newConstraint = new UnaryDateConstraint(((BinaryDateConstraint)constraint).R_VAL, constraint.OP, meetings.get(i).dates.get(0));
+						toAdd.add(newConstraint);
+					}
+				}
+				
+				for (DateConstraint d : toRemove) {
+					constraints.remove(d);
+				}
+				
+				for (DateConstraint d : toAdd) {
+					constraints.add(d);
+				}
+				
+				meetings = nodePreprocess(meetings, constraints);
+				
+			} else if (meetings.get(i).dates.size() == 0 ){
+				DateVar newMeeting = meetings.get(0);
+				newMeeting.dates.remove(0);
+				meetings.set(0, newMeeting);
+				arcPreprocess(meetings, constraints);
+			} else {
+				return null;
+			}
+		}
+		return meetings;
+	}
+	
 	public static ArrayList<DateVar> nodePreprocess(ArrayList<DateVar> meetings, Set<DateConstraint> constraints) {
 		for (DateConstraint constraint : constraints) {
 			if (constraint.arity() == 1) { 
@@ -89,6 +131,14 @@ public class CSP {
 
     	// preprocessing
     	meetings = nodePreprocess(meetings, constraints);
+    	if (meetings == null) {
+    		return null;
+    	}
+    	
+    	meetings = arcPreprocess(meetings, constraints);
+    	if (meetings == null) {
+    		return null;
+    	}
     	
     	// TO DELETE
     	if (meetings != null ) {
@@ -135,7 +185,6 @@ public class CSP {
         	for (LocalDate d : dates) {
         		if (d.compareTo(date) > 0) {
         			toRemove.add(d);
-        			System.out.println( d + " > " + date);
         			didRemove = true;
         		}
         	}
@@ -154,7 +203,6 @@ public class CSP {
         	for (LocalDate d : dates) {
         		if (d.compareTo(date) < 0) {
         			toRemove.add(d);
-        			System.out.println( d + " < " + date);
         			didRemove = true;
         		}
         	}
