@@ -1,15 +1,10 @@
 package csp;
 
-import static org.junit.Assert.fail;
-
 import java.time.LocalDate;
 import java.util.Set;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 /**
  * CSP: Calendar Satisfaction Problem Solver
@@ -18,96 +13,62 @@ import java.util.Map;
  * on the dates of each meeting.
  */
 public class CSP {
-	
-	public static ArrayList<DateVar> arcPreprocess(ArrayList<DateVar> meetings, Set<DateConstraint> constraints) {
-		for (int i = 0; i < meetings.size(); i++) {
-			if (meetings.get(i).dates.size() > 0 ) {
-				meetings.set(i, new DateVar(meetings.get(i).dates.get(0))); // set current meeting to the first date in it's available range
-				
-				ArrayList<DateConstraint> toRemove = new ArrayList<>();
-				ArrayList<DateConstraint> toAdd = new ArrayList<>();
 
-				for (DateConstraint constraint: constraints) {
-					if (constraint.arity() == 2 && i == ((BinaryDateConstraint)constraint).R_VAL) {
-						toRemove.add(constraint);
-						UnaryDateConstraint newConstraint = new UnaryDateConstraint(constraint.L_VAL, constraint.OP, meetings.get(i).dates.get(0));
-						toAdd.add(newConstraint);
-					} else if ( constraint.arity() == 2 && i == constraint.L_VAL ) {
-						toRemove.add(constraint);
-						UnaryDateConstraint newConstraint = new UnaryDateConstraint(((BinaryDateConstraint)constraint).R_VAL, constraint.OP, meetings.get(i).dates.get(0));
-						toAdd.add(newConstraint);
-					}
-				}
-				
-				for (DateConstraint d : toRemove) {
-					constraints.remove(d);
-				}
-				
-				for (DateConstraint d : toAdd) {
-					constraints.add(d);
-				}
-				
-				meetings = nodePreprocess(meetings, constraints);
-				
-			} else if (meetings.get(i).dates.size() == 0 ){
-				DateVar newMeeting = meetings.get(0);
-				newMeeting.dates.remove(0);
-				meetings.set(0, newMeeting);
-				arcPreprocess(meetings, constraints);
-			} else {
-				return null;
-			}
-		}
-		return meetings;
+	/**
+	 * Method that prunes invalid values from a variables domain, and returns true if the node is now consistent and false if a domain has been reduced to zero
+	 * @param meeting Meeting being constrained
+	 * @param constraint UnaryConstraint to check consistency of
+	 * @return true if meeting's domain is now consistent, and false if the domain has been reduced to 0;
+	 */
+	public static boolean nodeConsistency(Meeting meeting, UnaryDateConstraint constraint) {	
+		
+		switch (constraint.OP) {
+        case "==": 
+        	if (meeting.domain.contains(constraint.R_VAL)) { // if this is a valid date for the meeting
+            	meeting.setDate(constraint.R_VAL);			 // assign it to this date
+        	} else {										 // otherwise empty this Meeting's domain
+        		meeting.domain = new ArrayList<LocalDate>();
+        	}
+        	break;
+        case "!=": 
+        	meeting.domain.remove(constraint.R_VAL);
+        	break;
+        case ">":  
+        	meeting.removeBefore(constraint.R_VAL);
+        	meeting.domain.remove(constraint.R_VAL);
+        	break;
+        case "<":  
+        	meeting.removeAfter(constraint.R_VAL);
+        	meeting.domain.remove(constraint.R_VAL);
+        	break;
+        case ">=": 
+        	meeting.removeBefore(constraint.R_VAL);
+        	break;
+        case "<=": 
+        	meeting.removeAfter(constraint.R_VAL);
+        	break;
+        }
+		
+		return !meeting.domainEmpty();
+		
 	}
-	
-	public static ArrayList<DateVar> nodePreprocess(ArrayList<DateVar> meetings, Set<DateConstraint> constraints) {
-		for (DateConstraint constraint : constraints) {
-			if (constraint.arity() == 1) { 
-	    		DateVar newDateVar;
-	    		
-	            switch (constraint.OP) {
-	            case "==": 
-	            	if (meetings.get(constraint.L_VAL).dates.contains(((UnaryDateConstraint) constraint).R_VAL)) {
-		            	newDateVar = new DateVar(((UnaryDateConstraint) constraint).R_VAL);
-		            	meetings.set(constraint.L_VAL, newDateVar);
-	            	} else {
-	            		meetings = null;
-	            	}
-	            	break;
-	            case "!=": 
-	            	newDateVar = meetings.get(constraint.L_VAL);
-	            	newDateVar.remove(((UnaryDateConstraint) constraint).R_VAL);
-	            	meetings.set(constraint.L_VAL, newDateVar);
-	            	break;
-	            case ">":  
-	            	newDateVar = meetings.get(constraint.L_VAL);
-	            	newDateVar.remove(((UnaryDateConstraint) constraint).R_VAL);
-	            	newDateVar.removeDatesLessThan(((UnaryDateConstraint) constraint).R_VAL);
-	            	meetings.set(constraint.L_VAL, newDateVar);
-	            	break;
-	            case "<":  
-	            	newDateVar = meetings.get(constraint.L_VAL);
-	            	newDateVar.remove(((UnaryDateConstraint) constraint).R_VAL);
-	            	newDateVar.removeDatesLessThan(((UnaryDateConstraint) constraint).R_VAL);
-	            	meetings.set(constraint.L_VAL, newDateVar);
-	            	break;
-	            case ">=": 
-	            	newDateVar = meetings.get(constraint.L_VAL);
-	            	newDateVar.removeDatesLessThan(((UnaryDateConstraint) constraint).R_VAL);
-	            	meetings.set(constraint.L_VAL, newDateVar);
-	            	break;
-	            case "<=": 
-	            	newDateVar = meetings.get(constraint.L_VAL);
-	            	newDateVar.removeDatesGreaterThan(((UnaryDateConstraint) constraint).R_VAL);
-	            	meetings.set(constraint.L_VAL, newDateVar);
-	            	break;
-	            }
-			}
-            
-    	}
-		return meetings;
-	}
+
+  //TODO: use above method in nodePreprocess
+
+  //TODO: make a method that checks if a constraint is satisfied for two variable assignments and use in arc consistency
+
+  //TODO: make a method that checks for arc consistency with one constraint
+  // for each value in the tail, there exists a value in the head that satisfies it
+  // removes values from tail domain that are inconsistent
+
+  //TODO: method to add flipped of binary constraints to use in arcProprocess method
+
+  //TODO: use above method in arcPreprocess
+  // we do not need to propagate constraint, just check consistency for each constraint
+
+  //TODO: (possibly) make assignments as nodes whose edges are _____ and whose contents are an assignment
+
+  //TODO: select unassigned var which chooses the variable the smallest size domain (the meetings with the least amount of dates)
 
     /**
      * Public interface for the CSP solver in which the number of meetings,
@@ -121,111 +82,121 @@ public class CSP {
      *         indexed by the variable they satisfy, or null if no solution exists.
      */
     public static List<LocalDate> solve (int nMeetings, LocalDate rangeStart, LocalDate rangeEnd, Set<DateConstraint> constraints) {
-    	// set all meeting vars with all dates in range and its corresponding index
-    	ArrayList<DateVar> meetings = new ArrayList<>();
-    	
-    	for ( int i = 0; i < nMeetings; i++) {
-    		DateVar date = new DateVar(rangeStart, rangeEnd);
-    		meetings.add(date);
-    	}
-
-    	// preprocessing
-    	meetings = nodePreprocess(meetings, constraints);
-    	if (meetings == null) {
-    		return null;
-    	}
-    	
-    	meetings = arcPreprocess(meetings, constraints);
-    	if (meetings == null) {
-    		return null;
-    	}
-    	
-    	// TO DELETE
-    	if (meetings != null ) {
-	        for (DateVar d : meetings) {
-	        	System.out.println( "     " + d );
-	        }
-    	}
-        return (meetings != null ) ? meetings.get(0).dates : null;
+        ArrayList<LocalDate> solution = new ArrayList<>();
+        
+       // Construct all meetings
+        ArrayList<Meeting> meetings = new ArrayList<>();
+        for (int i = 0; i < nMeetings; i++) {
+        	Meeting newMeeting = new Meeting(rangeStart, rangeEnd);
+        	meetings.add(newMeeting);
+        }
+        
+        // node preprocessing
+        for (DateConstraint c: constraints) {
+        	if (c.arity() == 1) {
+        		nodeConsistency( meetings.get(c.L_VAL), (UnaryDateConstraint)c);
+        	}
+        }
+        
+        //Used to test TODO: delete before submission
+        System.out.println("Meetings after node preprocessing");
+        for (Meeting m: meetings) {
+        	System.out.println( "     " + m );
+        }
+        
+        
+        return solution;
     }
     
- // -----------------------------------------------
-    // DateVar Class
+    // -----------------------------------------------
+    // Meeting Variable
     // -----------------------------------------------
     
     /**
-     * DateVar class used to hold meetings and their valid domains.
+     * Meeting class that holds the domain of the meeting as an ArrayList<LocalDate>.
+     * It also holds the date the meeting has been assigned to if it has been assigned.
      */
-    private static class DateVar {
+    private static class Meeting {
         
-        ArrayList<LocalDate> dates;
+        ArrayList<LocalDate> domain;
+        LocalDate date = null;
         
-        DateVar (LocalDate start, LocalDate end) { // if given two dates will interpret as range
-            this.dates = new ArrayList<>();
-            
-            while (start.until(end).getDays() >= 0) {
-            	dates.add(start);
+        Meeting (LocalDate start, LocalDate end ) {
+            domain = new ArrayList<LocalDate>();
+            while (start.isBefore(end)) {
+            	domain.add(start);
             	start = start.plusDays(1);
             }
+            domain.add(start); // add end date to domain
         }
         
-        DateVar (LocalDate date) {
-        	this.dates = new ArrayList<>();
-        	dates.add(date);
+        Meeting(LocalDate date) {
+            domain = new ArrayList<LocalDate>();
+            domain.add(date);
+        	this.date = date;
         }
         
-        public boolean remove(LocalDate date) {
-        	return dates.remove(date);
+        public boolean isAssigned() {
+        	if (domain.size() == 1) {
+        		date = domain.get(0);
+        	}
+        	
+            return date != null;
         }
         
-        public boolean removeDatesGreaterThan(LocalDate date) {
-        	boolean didRemove = false;
-        	ArrayList<LocalDate> toRemove = new ArrayList<>(); 
-
-        	for (LocalDate d : dates) {
-        		if (d.compareTo(date) > 0) {
+        public boolean domainEmpty() {
+        	return domain.size() == 0;
+        }
+        
+        public void setDate(LocalDate date) {
+        	domain = new ArrayList<LocalDate>();
+        	domain.add(date);
+        	this.date = date;
+        }
+        
+        public boolean removeBefore(LocalDate date) {
+        	boolean removed = false;
+        	ArrayList<LocalDate> toRemove = new ArrayList<>();
+        	
+        	for (LocalDate d : domain) {
+        		if (d.isBefore(date)) {
         			toRemove.add(d);
-        			didRemove = true;
         		}
         	}
         	
         	for (LocalDate d : toRemove) {
-        		dates.remove(d);
+        		domain.remove(d);
         	}
         	
-        	return didRemove;
+        	return removed;
         }
         
-        public boolean removeDatesLessThan(LocalDate date) {
-        	boolean didRemove = false;
-        	ArrayList<LocalDate> toRemove = new ArrayList<>(); 
-
-        	for (LocalDate d : dates) {
-        		if (d.compareTo(date) < 0) {
+        public boolean removeAfter(LocalDate date) {
+        	boolean removed = false;
+        	ArrayList<LocalDate> toRemove = new ArrayList<>();
+        	
+        	for (LocalDate d : domain) {
+        		if (d.isAfter(date)) {
         			toRemove.add(d);
-        			didRemove = true;
         		}
         	}
         	
         	for (LocalDate d : toRemove) {
-        		dates.remove(d);
+        		domain.remove(d);
         	}
         	
-        	return didRemove;
+        	return removed;
         }
         
-        public boolean add(LocalDate date) {
-        	return dates.add(date);
-        }
-        
-        @Override
+        @Override 
         public String toString() {
-        	String dateStrings = "";
-        	for (LocalDate date : dates) {
-        		dateStrings += date + " ";
+        	String datesString = "";
+        	for (LocalDate d : domain) {
+        		datesString += d + " ";
         	}
-        	return dateStrings;
+        	return datesString;
         }
         
     }
+
 }
