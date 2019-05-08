@@ -171,7 +171,6 @@ public class CSP {
 					System.out.println( "Returning: " + result);
 					return result;
 				}
-				assignment.remove(assignment.size()-1);
 			}
 			assignment.remove(assignment.size()-1);
 			System.out.println("At bottom of for");
