@@ -15,10 +15,9 @@ import java.util.List;
 public class CSP {
 
 	/**
-	 * Method that prunes invalid values from a variables domain, and returns true if the node is now consistent and false if a domain has been reduced to zero
+	 * Method that prunes invalid values from a variables domain
 	 * @param meeting Meeting being constrained
 	 * @param constraint UnaryConstraint to check consistency of
-	 * @return true if meeting's domain is now consistent, and false if the domain has been reduced to 0;
 	 */
 	public static boolean nodeConsistency(Meeting meeting, UnaryDateConstraint constraint) {	
 		
@@ -50,21 +49,36 @@ public class CSP {
         }
 		
 		return !meeting.domainEmpty();
+	}
+	
+	/**
+	 * Method that ensures arc consistency for a BinaryDateConstraint. Returns true if arc is consistent, returns false if tail domain has been reduced to 0
+	 * @param tail Meeting on left side of constraint
+	 * @param head Meeting on right side of constraint
+	 * @param constraint BinaryDateConstraint to ensure consistency with
+	 * @return true if consistency has been ensured, false if tail domain has been reduced to 0
+	 */
+	public static boolean arcConsistency(Meeting tail, Meeting head, BinaryDateConstraint constraint) {
+		ArrayList<LocalDate> newTailDomain = new ArrayList<>();
+					
+		for (LocalDate d : tail.domain) {
+			UnaryDateConstraint c = new UnaryDateConstraint(0, constraint.OP, d); // doesn't matter what left value is since nodeConsistency assumes the correct meeting was put in
+			Meeting compareHead = new Meeting(head.domain); // preserves domain of head during nodeConsistency check
+
+			if ( nodeConsistency(compareHead, c) ) {
+				newTailDomain.add(d);
+			} 
+		}
+		
+		tail.setDomain(newTailDomain);
+		
+		return !tail.domainEmpty();
 		
 	}
-
-  //TODO: use above method in nodePreprocess
-
-  //TODO: make a method that checks if a constraint is satisfied for two variable assignments and use in arc consistency
 
   //TODO: make a method that checks for arc consistency with one constraint
   // for each value in the tail, there exists a value in the head that satisfies it
   // removes values from tail domain that are inconsistent
-
-  //TODO: method to add flipped of binary constraints to use in arcProprocess method
-
-  //TODO: use above method in arcPreprocess
-  // we do not need to propagate constraint, just check consistency for each constraint
 
   //TODO: (possibly) make assignments as nodes whose edges are _____ and whose contents are an assignment
 
@@ -98,10 +112,23 @@ public class CSP {
         	}
         }
         
+        
         //Used to test TODO: delete before submission
-        System.out.println("Meetings after node preprocessing");
-        for (Meeting m: meetings) {
-        	System.out.println( "     " + m );
+        System.out.println("Meetings after node preprocessing: " );
+        for (Meeting m : meetings) {
+        	System.out.println( "     " + m);
+        }
+        
+        System.out.println("Testing arc consistency method");
+        for (DateConstraint c : constraints) {
+        	if (c.arity() == 2) {
+        		BinaryDateConstraint bC = (BinaryDateConstraint)c;
+
+        		System.out.println( "     Constraint " + c + ( (arcConsistency(meetings.get(bC.L_VAL), meetings.get(bC.R_VAL), bC) ) ? " is consistent" : " is not consistent.") );
+        		System.out.println( "          tail: " + meetings.get(bC.L_VAL));
+        		System.out.println( "          head: " + meetings.get(bC.R_VAL));
+
+        	}
         }
         
         
@@ -136,6 +163,10 @@ public class CSP {
         	this.date = date;
         }
         
+        Meeting(ArrayList<LocalDate> domain) {
+        	setDomain(domain);
+        }
+        
         public boolean isAssigned() {
         	if (domain.size() == 1) {
         		date = domain.get(0);
@@ -152,6 +183,13 @@ public class CSP {
         	domain = new ArrayList<LocalDate>();
         	domain.add(date);
         	this.date = date;
+        }
+        
+        public void setDomain(ArrayList<LocalDate> inputDomain) {
+        	this.domain = new ArrayList<>();
+        	for (LocalDate d : inputDomain) {
+        		domain.add(d);
+        	}
         }
         
         public boolean removeBefore(LocalDate date) {
@@ -186,6 +224,10 @@ public class CSP {
         	}
         	
         	return removed;
+        }
+        
+        public boolean remove(LocalDate date) {
+        	return domain.remove(date);
         }
         
         @Override 
