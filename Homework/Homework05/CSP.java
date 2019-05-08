@@ -150,18 +150,22 @@ public class CSP {
 	public static ArrayList<LocalDate> backtrack(ArrayList<Meeting> meetings, Set<DateConstraint> constraints, ArrayList<LocalDate> assignment) {
 		ArrayList<LocalDate> result = new ArrayList<>();
 		
-		if (assignment.size() == meetings.size()) {
+		if (assignment.size() == meetings.size() && constraintsSatisfied(assignment, getRelevantConstraints(assignment, constraints)) ) {
 			System.out.println("Returning " + assignment);
 			return assignment;
 		}
 		
 		Meeting meetingToAdd = meetings.get(assignment.size()); // get the next variable that has not been assigned
-		System.out.println( "Looking at meeting " + meetingToAdd );
 		for (LocalDate d : meetingToAdd.domain) {
 			System.out.println( "Trying date " + d + " for meeting " + assignment.size() );
+			assignment.add(d);
+			System.out.println( "Current assignment: " + assignment);
 			if ( constraintsSatisfied(assignment, getRelevantConstraints(assignment, constraints)) ) {
-				assignment.add(d);
 				System.out.println( "Adding to assignment: " + assignment + ". Result: " + assignment);
+				System.out.println( "Current meetings: ");
+		        for (Meeting m : meetings ) {
+		        	System.out.println( m + " " );
+		        }
 				result = backtrack(meetings, constraints, assignment);
 				if ( result != null) {
 					System.out.println( "Returning: " + result);
@@ -169,6 +173,7 @@ public class CSP {
 				}
 				assignment.remove(assignment.size()-1);
 			}
+			assignment.remove(assignment.size()-1);
 			System.out.println("At bottom of for");
 		}
 		
@@ -208,6 +213,8 @@ public class CSP {
         for (Meeting m : meetings ) {
         	System.out.println( m + " " );
         }
+        
+//        return meetings.get(0).domain;
         
         return backtrack(meetings, constraints, new ArrayList<LocalDate>());
     }
