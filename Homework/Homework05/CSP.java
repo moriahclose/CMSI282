@@ -13,6 +13,35 @@ import java.util.List;
  * on the dates of each meeting.
  */
 public class CSP {
+	
+	/**
+     * Tests whether a given solution to a CSP satisfies all constraints or not
+     * Original Author: Andrew Forney
+     * Edited By: Moriah Tolliver
+     * @param soln Full instantiation of variables to assigned values, indexed by variable
+     * @param constraints The set of constraints the solution must satisfy
+     * @return true if solution is valid, false otherwise
+     */
+    public static boolean testSolution (List<LocalDate> soln, Set<DateConstraint> constraints) {
+    	boolean satisfied = true;
+        for (DateConstraint d : constraints) {
+            LocalDate leftDate = soln.get(d.L_VAL),
+                      rightDate = (d.arity() == 1) 
+                          ? ((UnaryDateConstraint) d).R_VAL 
+                          : soln.get(((BinaryDateConstraint) d).R_VAL);
+            
+            switch (d.OP) {
+            case "==": if (!leftDate.isEqual(rightDate))  return false; break;
+            case "!=": if (leftDate.isEqual(rightDate)) return false; break;
+            case ">":  if (leftDate.isBefore(rightDate) || leftDate.equals(rightDate))  return false; break;
+            case "<":  if (leftDate.isAfter(rightDate) || leftDate.equals(rightDate)) return false; break;
+            case ">=": if (leftDate.isBefore(rightDate))  return false; break; 
+            case "<=": if (leftDate.isAfter(rightDate)) return false; break;
+            }
+        }
+        return satisfied;
+        
+    }
 
 	/**
 	 * Method that prunes invalid values from a variables domain
@@ -73,17 +102,34 @@ public class CSP {
 		tail.setDomain(newTailDomain);
 		
 		return !tail.domainEmpty();
+	}
+	
+	/**
+	 * Returns meeting with smallest domain size from an ArrayList<Meeting>
+	 * @param meetings to compare domain sizes of
+	 * @return meeting with smallest domain size
+	 */
+	public static Meeting getNextVar(ArrayList<Meeting> meetings) {
+		Meeting smallestDomain = meetings.get(0);
 		
+		for (Meeting m : meetings) {
+			smallestDomain = (m.domain.size() < smallestDomain.domain.size()) ? m : smallestDomain;
+		}
+		
+		return smallestDomain;
 	}
 
-  //TODO: make a method that checks for arc consistency with one constraint
-  // for each value in the tail, there exists a value in the head that satisfies it
-  // removes values from tail domain that are inconsistent
-
-  //TODO: (possibly) make assignments as nodes whose edges are _____ and whose contents are an assignment
-
-  //TODO: select unassigned var which chooses the variable the smallest size domain (the meetings with the least amount of dates)
-
+	/**
+	 * Performs backtracking to arrive at assignment for all variables that satisfies all constraints, returns null if no solution possible
+	 * @param meetings that need assignments
+	 * @param constraints that need to be satisfied
+	 * @param assignment partial assignment to test for accuracy then assign the next var 
+	 * @return assignment that satisfies all constraints
+	 */
+//	public static ArrayList<LocalDate> backtrack(ArrayList<Meeting> meetings, Set<DateConstraint> constraints, ArrayList<LocalDate> assignment) {
+//		
+//	}
+//	
     /**
      * Public interface for the CSP solver in which the number of meetings,
      * range of allowable dates for each meeting, and constraints on meeting
@@ -105,10 +151,12 @@ public class CSP {
         	meetings.add(newMeeting);
         }
         
-        // node preprocessing
+        // node preprocessing; returns null if any domain goes to size 0
         for (DateConstraint c: constraints) {
         	if (c.arity() == 1) {
-        		nodeConsistency( meetings.get(c.L_VAL), (UnaryDateConstraint)c);
+        		if (!nodeConsistency( meetings.get(c.L_VAL), (UnaryDateConstraint)c)) {
+        			return null;
+        		}
         	}
         }
         
@@ -119,18 +167,7 @@ public class CSP {
         	System.out.println( "     " + m);
         }
         
-        System.out.println("Testing arc consistency method");
-        for (DateConstraint c : constraints) {
-        	if (c.arity() == 2) {
-        		BinaryDateConstraint bC = (BinaryDateConstraint)c;
-
-        		System.out.println( "     Constraint " + c + ( (arcConsistency(meetings.get(bC.L_VAL), meetings.get(bC.R_VAL), bC) ) ? " is consistent" : " is not consistent.") );
-        		System.out.println( "          tail: " + meetings.get(bC.L_VAL));
-        		System.out.println( "          head: " + meetings.get(bC.R_VAL));
-
-        	}
-        }
-        
+       System.out.println( "     Test solution " + meetings.get(0).domain + (testSolution(meetings.get(0).domain, constraints)  ? " is a valid solution." : " is not a valid solution") ); 
         
         return solution;
     }
