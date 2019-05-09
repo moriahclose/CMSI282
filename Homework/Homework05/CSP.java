@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -14,6 +15,13 @@ import java.util.List;
  * on the dates of each meeting.
  */
 public class CSP {
+	 
+	static String[] operators = {"==", "!=", "<", "<=", ">", ">="};
+	static ArrayList<String> OPERATORS = new ArrayList<>(Arrays.asList(operators));
+	
+	static String[] opposite_operators = {"==", "!=", ">", ">=", "<", "<="};
+	static ArrayList<String> OPPOSITE_OPERATORS = new ArrayList<>(Arrays.asList(operators));
+
 	
 	/**
      * Tests whether a given solution to a CSP satisfies all constraints or not
@@ -95,14 +103,12 @@ public class CSP {
 			UnaryDateConstraint c = new UnaryDateConstraint(0, constraint.OP, d); // doesn't matter what left value is since nodeConsistency assumes the correct meeting was put in
 			Meeting compareHead = new Meeting(head.domain);                       // preserves domain of head during nodeConsistency check
 
-			if ( nodeConsistency(compareHead, c) != null ) {
+			if ( nodeConsistency(compareHead, c).size() > 0 ) {
 				newTailDomain.add(d);
 			} 
 		}
 		
-		tail.setDomain(newTailDomain);
-		
-		return tail.domain;
+		return newTailDomain;
 	}
 	
 	/**
@@ -147,30 +153,8 @@ public class CSP {
 	 * @param Set<DateConstraints> to adjust
 	 * @return Set<DateConstraints> where binary constraints containing the assigned meeting have been changed to unary constraints 
 	 */
-	public static DateConstraint flip(BinaryDateConstraint c) {
-		ArrayList<DateConstraint> toRemove = new ArrayList<>();
-		BinaryDateConstraint newConstraint = new BinaryDateConstraint(c.L_VAL, c.OP, c.R_VAL);
-
-		switch (c.OP) {
-        case "==": 
-			newConstraint = new BinaryDateConstraint(((BinaryDateConstraint)c).R_VAL, c.OP, c.L_VAL);
-        	break;
-        case "!=": 
-			newConstraint = new BinaryDateConstraint(((BinaryDateConstraint)c).R_VAL, c.OP, c.L_VAL);
-        	break;
-        case ">":  
-			newConstraint = new BinaryDateConstraint(((BinaryDateConstraint)c).R_VAL, "<", c.L_VAL);
-        	break;
-        case "<":  
-			newConstraint = new BinaryDateConstraint(((BinaryDateConstraint)c).R_VAL, ">", c.L_VAL);
-        	break;
-        case ">=": 
-			newConstraint = new BinaryDateConstraint(((BinaryDateConstraint)c).R_VAL, "<=", c.L_VAL);
-        	break; 
-        case "<=": 
-			newConstraint = new BinaryDateConstraint(((BinaryDateConstraint)c).R_VAL, ">=", c.L_VAL);
-        	break;
-        }
+	public static BinaryDateConstraint flip(BinaryDateConstraint c) {
+		BinaryDateConstraint newConstraint = new BinaryDateConstraint(c.L_VAL, OPPOSITE_OPERATORS.get(OPERATORS.indexOf(c.OP)), c.R_VAL);
 		
 		return newConstraint;
 	}
@@ -186,33 +170,23 @@ public class CSP {
 		ArrayList<LocalDate> result = new ArrayList<>();
 		
 		if (assignment.size() == meetings.size() && constraintsSatisfied(assignment, getRelevantConstraints(assignment, constraints)) ) {
-			System.out.println("Returning " + assignment);
 			return assignment;
 		}
 		
 		Meeting meetingToAdd = meetings.get(getNextVar(meetings)); // get the next variable that has not been assigned
 
 		for (LocalDate d : meetingToAdd.domain) {
-			System.out.println( "Trying date " + d + " for meeting " + assignment.size() );
 			assignment.add(d);
 			
-			System.out.println( "Current assignment: " + assignment);
-			if ( constraintsSatisfied(assignment, getRelevantConstraints(assignment, constraints)) ) {
-				System.out.println( "Adding to assignment: " + assignment + ". Result: " + assignment);
-				System.out.println( "Current meetings: ");		        
-				
+			if ( constraintsSatisfied(assignment, getRelevantConstraints(assignment, constraints)) ) {			
 		        for (Meeting m : meetings ) {
-		        	System.out.println( m + " " );
 		        }
 				result = backtrack(meetings, constraints, assignment);
 				if ( result != null) {
-					System.out.println( "Returning: " + result);
 					return result;
 				}
-				//assignment.remove(assignment.size()-1);
 			}
 			assignment.remove(assignment.size()-1);
-			System.out.println("At bottom of for");
 		}
 		
 		return null;
@@ -240,38 +214,45 @@ public class CSP {
         // node preprocessing; returns null if any domain goes to size 0
         ArrayList<DateConstraint> toAdd = new ArrayList<>();
         
-//        for (DateConstraint c: constraints) {
-//        	if (c.arity() == 2) {
-//        		toAdd.add(flip((BinaryDateConstraint)c));		
-//        		meetings.get(c.L_VAL).domain = nodeConsistency( meetings.get(c.L_VAL), (UnaryDateConstraint)c);
-//        		if (meetings.get(c.L_VAL).domain == null) {
-//        			return null;
-//        		}
-//        	} else { // add opposite of all binary constraints to constraints
-//        	}
-//        }
-        
-        for (DateConstraint c : toAdd) {
-        	constraints.add(c);
-        }
-        
-        for (DateConstraint c: constraints) {
-        	if (c.arity() == 1) {
-        		meetings.get(c.L_VAL).domain = nodeConsistency( meetings.get(c.L_VAL), (UnaryDateConstraint)c);
-        		if (meetings.get(c.L_VAL).domain == null) {
-        			return null;
-        		}
-        	} else {
-        		meetings.get(c.L_VAL).domain = arcConsistency( meetings.get(c.L_VAL), meetings.get(((BinaryDateConstraint)c).R_VAL), (BinaryDateConstraint)c);
+        for (DateConstraint c : constraints) {
+        	if (c.arity() == 2) {
+            	BinaryDateConstraint newConstraint = flip((BinaryDateConstraint)c);
+            	toAdd.add(newConstraint);
         	}
         }
         
-        
-        System.out.println( "Meetings after preprocessing: ");
-        for (Meeting m : meetings ) {
-        	System.out.println( m + " " );
+        for (DateConstraint c : toAdd) { // done separately to avoid concurrent modification error
+        	constraints.add(c);
         }
         
+        // separate unary and binary constraints
+        Set<UnaryDateConstraint> unaryConstraints = new HashSet<>();
+        Set<BinaryDateConstraint> binaryConstraints = new HashSet<>();
+
+        for (DateConstraint c: constraints) { 
+        	if (c.arity() == 1) {
+        		unaryConstraints.add((UnaryDateConstraint)c);
+        	} 
+        	else {
+        		binaryConstraints.add((BinaryDateConstraint)c);
+        	}
+        }
+        
+        // do node preprocessing first
+        for (UnaryDateConstraint c : unaryConstraints) {
+        	meetings.get(c.L_VAL).setDomain(nodeConsistency(meetings.get(c.L_VAL), c));
+        	if (meetings.get(c.L_VAL).domainEmpty()) {
+        		return null;
+        	}
+        }
+
+        for (BinaryDateConstraint c : binaryConstraints) {
+        	meetings.get(c.L_VAL).setDomain(arcConsistency(meetings.get(((BinaryDateConstraint)c).R_VAL), meetings.get(c.L_VAL), c));
+        	if (meetings.get(c.L_VAL).domainEmpty()) {
+        		return null;
+        	}
+        }
+
 //        return meetings.get(0).domain;
         
         return backtrack(meetings, constraints, new ArrayList<LocalDate>());
