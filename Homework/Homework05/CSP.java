@@ -15,136 +15,6 @@ import java.util.List;
  * on the dates of each meeting.
  */
 public class CSP {
-	 
-	static String[] operators = {"==", "!=", "<", "<=", ">", ">="};
-	static ArrayList<String> OPERATORS = new ArrayList<>(Arrays.asList(operators));
-	
-	static String[] opposite_operators = {"==", "!=", ">", ">=", "<", "<="};
-	static ArrayList<String> OPPOSITE_OPERATORS = new ArrayList<>(Arrays.asList(operators));
-
-	
-	/**
-     * Tests whether a given solution to a CSP satisfies all constraints or not
-     * Original Author: Andrew Forney
-     * Edited By: Moriah Tolliver
-     * @param soln Full instantiation of variables to assigned values, indexed by variable
-     * @param constraints The set of constraints the solution must satisfy
-     * @return true if solution is valid, false otherwise
-     */
-    public static boolean constraintsSatisfied (List<LocalDate> soln, Set<DateConstraint> constraints) {
-    	boolean satisfied = true;
-        for (DateConstraint d : constraints) {
-            LocalDate leftDate = soln.get(d.L_VAL),
-                      rightDate = (d.arity() == 1) 
-                          ? ((UnaryDateConstraint) d).R_VAL 
-                          : soln.get(((BinaryDateConstraint) d).R_VAL);
-            
-            switch (d.OP) {
-            case "==": if (!leftDate.isEqual(rightDate))  return false; break;
-            case "!=": if (leftDate.isEqual(rightDate)) return false; break;
-            case ">":  if (leftDate.isBefore(rightDate) || leftDate.equals(rightDate))  return false; break;
-            case "<":  if (leftDate.isAfter(rightDate) || leftDate.equals(rightDate)) return false; break;
-            case ">=": if (leftDate.isBefore(rightDate))  return false; break; 
-            case "<=": if (leftDate.isAfter(rightDate)) return false; break;
-            }
-        }
-        return satisfied;
-        
-    }
-
-	/**
-	 * Method that prunes invalid values from a variables domain
-	 * @param meeting Meeting being constrained
-	 * @param constraint UnaryConstraint to check consistency of
-	 */
-	public static ArrayList<LocalDate> nodeConsistency(Meeting meeting, UnaryDateConstraint constraint) {	
-		
-		switch (constraint.OP) {
-        case "==": 
-        	if (meeting.domain.contains(constraint.R_VAL)) { // if this is a valid date for the meeting
-        		meeting.setDate(constraint.R_VAL);           // assign it to this date
-        	} else {										 // otherwise empty this Meeting's domain
-        		meeting.domain = new ArrayList<LocalDate>();
-        	}
-        	break;
-        case "!=": 
-        	meeting.domain.remove(constraint.R_VAL);
-        	break;
-        case ">":  
-        	meeting.removeBefore(constraint.R_VAL);
-        	meeting.domain.remove(constraint.R_VAL);
-        	break;
-        case "<":  
-        	meeting.removeAfter(constraint.R_VAL);
-        	meeting.domain.remove(constraint.R_VAL);
-        	break;
-        case ">=": 
-        	meeting.removeBefore(constraint.R_VAL);
-        	break;
-        case "<=": 
-        	meeting.removeAfter(constraint.R_VAL);
-        	break;
-        }
-		
-		return meeting.domain;
-	}
-	
-	/**
-	 * Method that ensures arc consistency for a BinaryDateConstraint. Returns true if arc is consistent, returns false if tail domain has been reduced to 0
-	 * @param tail Meeting on left side of constraint
-	 * @param head Meeting on right side of constraint
-	 * @param constraint BinaryDateConstraint to ensure consistency with
-	 * @return true if consistency has been ensured, false if tail domain has been reduced to 0
-	 */
-	public static ArrayList<LocalDate> arcConsistency(Meeting tail, Meeting head, BinaryDateConstraint constraint) {
-		ArrayList<LocalDate> newTailDomain = new ArrayList<>();
-					
-		for (LocalDate d : tail.domain) {
-			UnaryDateConstraint c = new UnaryDateConstraint(0, constraint.OP, d); // doesn't matter what left value is since nodeConsistency assumes the correct meeting was put in
-			Meeting compareHead = new Meeting(head.domain);                       // preserves domain of head during nodeConsistency check
-
-			if ( nodeConsistency(compareHead, c).size() > 0 ) {
-				newTailDomain.add(d);
-			} 
-		}
-		
-		return newTailDomain;
-	}
-	
-	/**
-	 * Returns index of meeting with smallest domain size that has not been assigned from an ArrayList<Meeting>
-	 * @param meetings to compare domain sizes of
-	 * @return index of meeting with smallest domain size
-	 */
-	public static int getNextVar(ArrayList<Meeting> meetings) {
-		Meeting smallestDomain = meetings.get(0);
-		
-		for (Meeting m : meetings) {
-			smallestDomain = (m.domain.size() < smallestDomain.domain.size() && m.domain.size() > 1) ? m : smallestDomain;
-		}
-		
-		return meetings.indexOf(smallestDomain);
-	}
-	
-	/**
-	 * Returns the constraints relevant to the variables that have already been assigned
-	 * @param assignment of variables
-	 * @param constraints to check if they are relevant
-	 * @return set of date constraints that are relevant to the assigned variables
-	 */
-	public static Set<DateConstraint> getRelevantConstraints(ArrayList<LocalDate> assignment, Set<DateConstraint> constraints) {
-		Set<DateConstraint> relevantConstraints = new HashSet<DateConstraint>();
-		
-		for ( DateConstraint c : constraints) {
-			if (c.arity() == 1 && c.L_VAL < assignment.size() ) {
-				relevantConstraints.add(c);
-			} else if ( c.L_VAL < assignment.size() && ((BinaryDateConstraint)c).R_VAL < assignment.size() ){
-				relevantConstraints.add(c);
-			}
-		}
-		
-		return relevantConstraints;
-	}
 	
 	/**
 	 * Flips a binary constraint into a unary constraint
@@ -154,45 +24,139 @@ public class CSP {
 	 * @return Set<DateConstraints> where binary constraints containing the assigned meeting have been changed to unary constraints 
 	 */
 	public static BinaryDateConstraint flip(BinaryDateConstraint c) {
-		BinaryDateConstraint newConstraint = new BinaryDateConstraint(c.L_VAL, OPPOSITE_OPERATORS.get(OPERATORS.indexOf(c.OP)), c.R_VAL);
+		String[] operators = {"==", "!=", "<", "<=", ">", ">="};
+		ArrayList<String> OPERATORS = new ArrayList<>(Arrays.asList(operators));
+		
+		String[] opposite_operators = {"==", "!=", ">", ">=", "<", "<="};
+		ArrayList<String> OPPOSITE_OPERATORS = new ArrayList<>(Arrays.asList(opposite_operators));
+		
+		BinaryDateConstraint newConstraint = new BinaryDateConstraint(c.R_VAL, OPPOSITE_OPERATORS.get(OPERATORS.indexOf(c.OP)), c.L_VAL);
 		
 		return newConstraint;
 	}
-
+	
 	/**
-	 * Performs backtracking to arrive at assignment for all variables that satisfies all constraints, returns null if no solution possible
-	 * @param meetings that need assignments
-	 * @param constraints that need to be satisfied
-	 * @param assignment partial assignment to test for accuracy then assign the next var 
-	 * @return assignment that satisfies all constraints
+	 * Method that prunes invalid values from a variables domain
+	 * @param meeting Meeting being constrained
+	 * @param constraint UnaryConstraint to check consistency of
 	 */
-	public static ArrayList<LocalDate> backtrack(ArrayList<Meeting> meetings, Set<DateConstraint> constraints, ArrayList<LocalDate> assignment) {
-		ArrayList<LocalDate> result = new ArrayList<>();
+	public static void nodeConsistency(Meeting meeting, UnaryDateConstraint constraint) {	
+		ArrayList<LocalDate> toRemove = new ArrayList<>();
 		
-		if (assignment.size() == meetings.size() && constraintsSatisfied(assignment, getRelevantConstraints(assignment, constraints)) ) {
-			return assignment;
-		}
-		
-		Meeting meetingToAdd = meetings.get(getNextVar(meetings)); // get the next variable that has not been assigned
-
-		for (LocalDate d : meetingToAdd.domain) {
-			assignment.add(d);
-			
-			if ( constraintsSatisfied(assignment, getRelevantConstraints(assignment, constraints)) ) {			
-		        for (Meeting m : meetings ) {
-		        }
-				result = backtrack(meetings, constraints, assignment);
-				if ( result != null) {
-					return result;
-				}
+		for (LocalDate d : meeting.domain) {
+			if (!constraintSatisfied(d, constraint, constraint.R_VAL)) {
+				toRemove.add(d);
 			}
-			assignment.remove(assignment.size()-1);
 		}
 		
-		return null;
+		for (LocalDate d : toRemove) {
+			meeting.domain.remove(d);
+		}
 	}
 	
+	/**
+	 * Prunes invalid values from tail's domain (assumes tail will be on left side of constraint)
+	 * @param Meeting tail
+	 * @param Meeting head
+	 * @param BinaryDateConstraint to satisfy
+	 */
+	public static void arcConsistency(Meeting tail, Meeting head, BinaryDateConstraint c) {
+		ArrayList<LocalDate> toAdd = new ArrayList<>();
+		
+		for (LocalDate d : tail.domain) {
+			for ( LocalDate hd : head.domain) {
+				if (constraintSatisfied(d, c, hd)) {
+					toAdd.add(d);
+					break; // exit this loop once the value is found, since we only need one
+				}
+			} 
+		}
+		
+		tail.domain = new ArrayList<>();
+		for (LocalDate d : toAdd) {
+			tail.domain.add(d);
+		}
+	}
+	
+	/**
+     * Tests whether a given solution to a CSP satisfies all constraints or not
+     * @param soln Full instantiation of variables to assigned values, indexed by variable
+     * @param constraints The set of constraints the solution must satisfy
+     * @return true if all constraints are satisfied, false otherwise
+     */
+    public static boolean testSolution (List<LocalDate> soln, Set<DateConstraint> constraints) {
+        for (DateConstraint d : constraints) {
+        	LocalDate leftDate = soln.get(d.L_VAL),
+                      rightDate = (d.arity() == 1) 
+                          ? ((UnaryDateConstraint) d).R_VAL 
+                          : soln.get(((BinaryDateConstraint) d).R_VAL);
+            
+            if (leftDate == null || rightDate == null) {
+            	continue;
+            }
+                          
+            if (!constraintSatisfied(leftDate, d, rightDate)) {
+            	return false;
+            }
+        }
+        return true;
+    }
+    
+    
     /**
+     * Given two dates, returns whether the dates satisfy the given constraint
+     * @param LocalDate date on left side of equality
+     * @param DateConstraint holding constraint operator
+     * @param LocalDate date on right side of equality
+     */
+    public static boolean constraintSatisfied(LocalDate leftDate, DateConstraint d, LocalDate rightDate) {
+    	boolean sat = false;
+    	
+        switch (d.OP) {
+	        case "==": if (leftDate.isEqual(rightDate))  sat = true; break;
+	        case "!=": if (!leftDate.isEqual(rightDate)) sat = true; break;
+	        case ">":  if (leftDate.isAfter(rightDate))  sat = true; break;
+	        case "<":  if (leftDate.isBefore(rightDate)) sat = true; break;
+	        case ">=": if (leftDate.isAfter(rightDate) || leftDate.isEqual(rightDate))  sat = true; break;
+	        case "<=": if (leftDate.isBefore(rightDate) || leftDate.isEqual(rightDate)) sat = true; break;
+        }
+        if (!sat) {
+            return sat;
+        }
+        
+        return true;
+    }
+	
+    /**
+     * Returns solution to a CSP using backtracking
+     * @param ArrayList<Meeting> holds variables, their domains, and their relevant constraints
+     * @param Set<DateConstraint> constraints to be satisfied
+     * @return List<LocalDate> assignment of dates to meetings
+     */
+    public static ArrayList<LocalDate> backtracking(ArrayList<Meeting> meetings, Set<DateConstraint> constraints, ArrayList<LocalDate> assignment, int index) {
+    	
+    	if (testSolution(assignment, constraints) && !assignment.contains(null)) {
+    		return assignment;
+    	}
+    	
+    	Meeting meetingToAdd = meetings.get(index);
+    	
+    	for (LocalDate d : meetingToAdd.domain) {
+    		assignment.set(index, d);
+    		if (testSolution(assignment, constraints)) {
+    			ArrayList<LocalDate> result = backtracking(meetings, constraints, assignment, index+1);
+    			if (result != null) {
+    				return result;
+    			}
+    		}
+    		assignment.set(index, null);
+    	}
+    	
+    	return null;
+    	
+    }
+    
+	/**
      * Public interface for the CSP solver in which the number of meetings,
      * range of allowable dates for each meeting, and constraints on meeting
      * times are specified.
@@ -203,14 +167,14 @@ public class CSP {
      * @return A list of dates that satisfies each of the constraints for each of the n meetings,
      *         indexed by the variable they satisfy, or null if no solution exists.
      */
-    public static List<LocalDate> solve (int nMeetings, LocalDate rangeStart, LocalDate rangeEnd, Set<DateConstraint> constraints) {        
-       // Construct all meetings
+    public static List<LocalDate> solve (int nMeetings, LocalDate rangeStart, LocalDate rangeEnd, Set<DateConstraint> constraints) {   
+    	 // Construct all meetings
         ArrayList<Meeting> meetings = new ArrayList<>();
         for (int i = 0; i < nMeetings; i++) {
         	Meeting newMeeting = new Meeting(rangeStart, rangeEnd);
         	meetings.add(newMeeting);
         }
-        
+                
         // node preprocessing; returns null if any domain goes to size 0
         ArrayList<DateConstraint> toAdd = new ArrayList<>();
         
@@ -220,6 +184,7 @@ public class CSP {
             	toAdd.add(newConstraint);
         	}
         }
+        
         
         for (DateConstraint c : toAdd) { // done separately to avoid concurrent modification error
         	constraints.add(c);
@@ -240,27 +205,27 @@ public class CSP {
         
         // do node preprocessing first
         for (UnaryDateConstraint c : unaryConstraints) {
-        	meetings.get(c.L_VAL).setDomain(nodeConsistency(meetings.get(c.L_VAL), c));
+        	nodeConsistency(meetings.get(c.L_VAL), c);
         	if (meetings.get(c.L_VAL).domainEmpty()) {
         		return null;
         	}
         }
 
         for (BinaryDateConstraint c : binaryConstraints) {
-        	meetings.get(c.L_VAL).setDomain(arcConsistency(meetings.get(((BinaryDateConstraint)c).R_VAL), meetings.get(c.L_VAL), c));
+        	arcConsistency(meetings.get(c.L_VAL), meetings.get( ((BinaryDateConstraint)c).R_VAL), c);
         	if (meetings.get(c.L_VAL).domainEmpty()) {
         		return null;
         	}
         }
 
-//        return meetings.get(0).domain;
+        ArrayList<LocalDate> assignment = new ArrayList<LocalDate>();
+        for (int i = 0; i < nMeetings; i++) {
+        	assignment.add(null);
+        }
         
-        return backtrack(meetings, constraints, new ArrayList<LocalDate>());
+        ArrayList<LocalDate> result = backtracking(meetings, constraints, assignment, 0);
+        return result;
     }
-    
-    // -----------------------------------------------
-    // Meeting Variable
-    // -----------------------------------------------
     
     /**
      * Meeting class that holds the domain of the meeting as an ArrayList<LocalDate>.
@@ -269,7 +234,6 @@ public class CSP {
     private static class Meeting {
         
         ArrayList<LocalDate> domain;
-        LocalDate date = null;
         
         Meeting (LocalDate start, LocalDate end ) {
             domain = new ArrayList<LocalDate>();
@@ -280,88 +244,19 @@ public class CSP {
             domain.add(start); // add end date to domain
         }
         
-        Meeting(LocalDate date) {
-            domain = new ArrayList<LocalDate>();
-            domain.add(date);
-        	this.date = date;
-        }
-        
-        Meeting(ArrayList<LocalDate> domain) {
-        	setDomain(domain);
-        }
-        
-        public boolean isAssigned() {
-        	if (domain.size() == 1) {
-        		date = domain.get(0);
-        	}
-        	
-            return date != null;
-        }
-        
         public boolean domainEmpty() {
         	return domain.size() == 0;
         }
         
-        public void setDate(LocalDate date) {
-        	domain = new ArrayList<LocalDate>();
-        	domain.add(date);
-        	this.date = date;
-        }
-        
-        public void setDomain(ArrayList<LocalDate> inputDomain) {
-        	this.domain = new ArrayList<>();
-        	for (LocalDate d : inputDomain) {
-        		domain.add(d);
-        	}
-        }
-        
-        public boolean removeBefore(LocalDate date) {
-        	boolean removed = false;
-        	ArrayList<LocalDate> toRemove = new ArrayList<>();
-        	
-        	for (LocalDate d : domain) {
-        		if (d.isBefore(date)) {
-        			toRemove.add(d);
-        		}
-        	}
-        	
-        	for (LocalDate d : toRemove) {
-        		domain.remove(d);
-        	}
-        	
-        	return removed;
-        }
-        
-        public boolean removeAfter(LocalDate date) {
-        	boolean removed = false;
-        	ArrayList<LocalDate> toRemove = new ArrayList<>();
-        	
-        	for (LocalDate d : domain) {
-        		if (d.isAfter(date)) {
-        			toRemove.add(d);
-        		}
-        	}
-        	
-        	for (LocalDate d : toRemove) {
-        		domain.remove(d);
-        	}
-        	
-        	return removed;
-        }
-        
-        public boolean remove(LocalDate date) {
-        	return domain.remove(date);
-        }
-        
         @Override 
         public String toString() {
-        	String datesString = "";
+        	String datesString = "[";
         	for (LocalDate d : domain) {
         		datesString += d + " ";
         	}
+        	datesString += "]";
         	return datesString;
         }
         
     }
-
 }
